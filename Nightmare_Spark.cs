@@ -33,7 +33,7 @@ namespace Nightmare_Spark
         public List<int> CharmIDs { get; private set; }
 
         private GameObject? MyTrail;
-        private GameObject? NKG;
+        private static GameObject? NKG;
         public static AudioSource AudioSource;
         public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
@@ -43,8 +43,8 @@ namespace Nightmare_Spark
 
             var go = new GameObject("AudioSource");
             AudioSource = go.AddComponent<AudioSource>();
-            AudioSource.pitch = 1f;
-            AudioSource.volume = 1f;
+            AudioSource.pitch = .75f;
+            AudioSource.volume = .3f;
             UnityEngine.Object.DontDestroyOnLoad(AudioSource);
 
             CharmIDs = CharmHelper.AddSprites(Ts.Get(TextureStrings.NightmareSparkKey));
@@ -205,13 +205,13 @@ namespace Nightmare_Spark
             }
             void Start()
             {
-                GameObject Firebat = GameObject.Instantiate(NKG.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
+                var Firebat = NKG.LocateMyFSM("Control").GetState("Firebat 1");
 
                 if (!HeroController.instance)
                 {
                     return;
                 }
-                var audioClip = Firebat.GetState("Firebat 1").GetAction<AudioPlayerOneShotSingle>(8).audioClip.Value as AudioClip;
+                var audioClip = Firebat.GetAction<AudioPlayerOneShotSingle>(8).audioClip.Value as AudioClip;
                 Nightmare_Spark.AudioSource.PlayOneShot(audioClip);
 
                 rb2d = gameObject.GetAddComponent<Rigidbody2D>();
@@ -258,8 +258,9 @@ namespace Nightmare_Spark
                     
                     var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
                     PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
-                    grimmchild.GetState("Shoot").GetAction<SetFsmInt>(6).setValue = gcdamage;
-                }
+                    if (grimmchild != null)
+                    { grimmchild.GetState("Shoot").GetAction<SetFsmInt>(6).setValue = gcdamage; }
+                    }
             }
             else
             {
@@ -317,7 +318,7 @@ namespace Nightmare_Spark
 
         private readonly int numberOfSpawns = 8;
         private readonly float Rate = 15f;
-        private IEnumerator MyCoroutine()
+        private IEnumerator TrailCoroutine()
         {
             yield return new WaitWhile(() => HeroController.instance == null);
 
@@ -335,7 +336,7 @@ namespace Nightmare_Spark
                 {
                     AddDamageEnemy(MyTrail);
                 }
-                
+
                 MyTrail.gameObject.GetComponent<ParticleSystem>().startSize = 0.25F;
                 MyTrail.layer = (int)PhysLayers.HERO_ATTACK;
 
@@ -348,13 +349,42 @@ namespace Nightmare_Spark
             }
         }
 
+        private bool cooldown = false;
+        private IEnumerator TrailCooldown(float duration)
+        {
+            cooldown = true;
+            Log($"Cooldown: {duration}");
+            yield return new WaitForSeconds(duration);
+            HeroController.instance.GetComponent<SpriteFlash>().flash(new Color(1,0,0), 0.85f, 0.01f, 0.01f, 0.35f);
+            
+            cooldown = false;
+        }
         private bool StartTrail()
         {
             if (Satchel.Reflected.HeroControllerR.CanDash() == true && (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}")))
             {
-                    GameManager.instance.StartCoroutine(MyCoroutine());
-                    return false;
+                float duration;
+                if (PlayerData.instance.GetBool("equippedCharm_31"))
+                {
+                    duration = 1f;
+                }
+                else
+                {
+                    duration = 1.75f;
+                }
 
+                if (!cooldown)
+                {
+
+                    GameManager.instance.StartCoroutine(TrailCoroutine());
+                    GameManager.instance.StartCoroutine(TrailCooldown(duration));                 
+                    return false;
+                }
+                else
+                {
+                    
+                    return false;
+                }
             }
             else
             {
@@ -374,6 +404,6 @@ namespace Nightmare_Spark
             dmg.specialType = 0;
             return dmg;
         }
-
+        
     }
 }
