@@ -10,7 +10,7 @@ using Satchel.Futils;
 using GlobalEnums;
 using SFCore;
 using SFCore.Generics;
-
+using ItemChanger;
 namespace Nightmare_Spark
 {
     public class Nightmare_Spark : SaveSettingsMod<SaveSettings>
@@ -225,6 +225,54 @@ namespace Nightmare_Spark
             {
 
             }
+            public void OnCollsionEnter2D(Collision2D collision)
+            {
+                Modding.Logger.Log(collision.collider.gameObject.tag);
+                Modding.Logger.Log("b");
+                if (collision.gameObject.layer == (int)PhysLayers.TERRAIN)
+                {
+                    {
+                        Modding.Logger.Log("a");
+                        Destroy(gameObject);
+                    }
+                }
+            }
+            public void OnTriggerEnter2D(Collider collision)
+            {
+                Modding.Logger.Log(collision.gameObject.tag);
+                Modding.Logger.Log("b");
+                if (collision.gameObject.layer == (int)PhysLayers.TERRAIN)
+                {
+                    {
+                        Modding.Logger.Log("a");
+                        Destroy(gameObject);
+                    }
+                }
+            }
+            public void OnCollisionStay2D(Collision2D collision)
+            {
+                Modding.Logger.Log(collision.collider.gameObject.tag);
+                Modding.Logger.Log("b");
+                if (collision.gameObject.layer == (int)PhysLayers.TERRAIN)
+                {
+                    {
+                        Modding.Logger.Log("a");
+                        Destroy(gameObject);
+                    }
+                }
+            }
+            public void OnTriggerStay2D(Collision2D collision)
+            {
+                Modding.Logger.Log(collision.collider.gameObject.tag);
+                Modding.Logger.Log("b");
+                if (collision.gameObject.layer == (int)PhysLayers.TERRAIN)
+                {
+                    {
+                        Modding.Logger.Log("a");
+                        Destroy(gameObject);
+                    }
+                }
+            }
         }
 
 
@@ -290,6 +338,7 @@ namespace Nightmare_Spark
 
                 GameObject Firebat = GameObject.Instantiate(NKG.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
                 GameObject.Destroy(Firebat.LocateMyFSM("Control"));
+                Firebat.layer = (int)PhysLayers.HERO_ATTACK;
                 Firebat.AddComponent<MyMonoBehaviourForBats>();
                 if (PlayerData.instance.GetBool("equippedCharm_19"))
                 {
@@ -304,12 +353,12 @@ namespace Nightmare_Spark
                 {
                     GameObject.Destroy(DH);
                 }
-                Firebat.layer = (int)PhysLayers.HERO_ATTACK;
+                
                 GameObject.DontDestroyOnLoad(Firebat);
                 var col = Firebat.GetComponent<Collider2D>();
 
-                col.isTrigger = true;
-
+                //col.isTrigger = true;
+                col.enabled = true;
 
                 Firebat.transform.position = HeroController.instance.transform.position - new Vector3(0, 0.5f, 0);
                 yield return new WaitForSeconds(.25F);
@@ -353,7 +402,6 @@ namespace Nightmare_Spark
         private IEnumerator TrailCooldown(float duration)
         {
             cooldown = true;
-            Log($"Cooldown: {duration}");
             yield return new WaitForSeconds(duration);
             HeroController.instance.GetComponent<SpriteFlash>().flash(new Color(1,0,0), 0.85f, 0.01f, 0.01f, 0.35f);
             
@@ -394,7 +442,7 @@ namespace Nightmare_Spark
         public DamageEnemies AddDamageEnemy(GameObject go)
         {
             var dmg = go.GetAddComponent<DamageEnemies>();
-            dmg.attackType = AttackTypes.Nail;
+            dmg.attackType = AttackTypes.Spell;
             dmg.circleDirection = false;
             dmg.damageDealt = 15;
             dmg.direction = 90 * 3;
