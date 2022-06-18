@@ -418,7 +418,50 @@ namespace Nightmare_Spark
 
                 HeroController.instance.AffectedByGravity(true);
 
-                
+
+            }
+        }
+
+        [RequireComponent(typeof(LineRenderer))]
+        public class Circle : MonoBehaviour
+        {
+            [Range(0, 55)]
+            public int segments = 55;
+            [Range(0, 5)]
+            public float xradius = 5;
+            [Range(0, 5)]
+            public float yradius = 5;
+            LineRenderer limit;
+            private void Start()
+            {
+                limit = gameObject.GetComponent<LineRenderer>();
+                limit.name = "Limit";
+                limit.startWidth = .5f;
+                limit.endWidth = .5f;
+                limit.startColor = new Color32(1, 0, 0, 1);
+                limit.endColor = new Color32(1, 0, 0, 1);
+                limit.SetVertexCount(segments + 1);
+                limit.useWorldSpace = false;
+                CreatePoints();
+
+            }
+            void CreatePoints()
+            {
+                float x;
+                float y;
+                float z;
+
+                float angle = 20f;
+
+                for (int i = 0; i < (segments + 1); i++)
+                {
+                    x = Mathf.Sin(Mathf.Deg2Rad * angle) * xradius;
+                    y = Mathf.Cos(Mathf.Deg2Rad * angle) * yradius;
+
+                    limit.SetPosition(i, new Vector3(x, y, 0));
+
+                    angle += (360f / segments);
+                }
             }
         }
         private void GrimmSlug()
@@ -432,9 +475,23 @@ namespace Nightmare_Spark
             sc.RemoveTransition("Focus Right", "LEFT GROUND");
 
             gsActive = true;
-            
-        }
 
+            GameObject go = new GameObject();
+            go.name = "go";
+            go.AddComponent<Circle>();
+            GameObject.Instantiate(go).transform.position = HeroController.instance.transform.position - new Vector3(0, 0, 0);
+            GameManager.instance.StartCoroutine(Timer(go));
+
+        }
+        private IEnumerator Timer(GameObject go)
+        {
+            yield return new WaitWhile(() => HeroController.instance.spellControl.GetState("Focus Cancel 2").GetAction<SetBoolValue>(16).boolVariable.Value || HeroController.instance.spellControl.GetState("Focus Get Finished 2").GetAction<SetBoolValue>(15).boolVariable.Value)
+            {
+                
+            };
+            GameObject.Destroy(go);
+
+        }
         private void DiveFireballs(int damage, int spread)
         {
             int x = spread;
