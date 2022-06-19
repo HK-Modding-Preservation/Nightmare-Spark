@@ -18,6 +18,8 @@ namespace Nightmare_Spark
 {
     public class Nightmare_Spark : SaveSettingsMod<SaveSettings>
     {
+        //--------------------------------------------------------------------------------------------------------//
+                                            //Start//
         new public string GetName() => "NightmareSpark";
         public override string GetVersion() => "V0.3";
         public Nightmare_Spark() : base("Nightmare Spark")
@@ -29,7 +31,8 @@ namespace Nightmare_Spark
         {
             return new List<(string, string)>()
             {
-                ("GG_Grimm_Nightmare", "Grimm Control/Nightmare Grimm Boss")
+                ("GG_Grimm_Nightmare", "Grimm Control/Nightmare Grimm Boss"),
+                ("GG_Grimm_Nightmare", "Grimm Control/Grimm Bats/Real Bat")
             };
         }
         public TextureStrings Ts { get; private set; }
@@ -37,12 +40,15 @@ namespace Nightmare_Spark
 
         private GameObject? MyTrail;
         private static GameObject? NKG;
+        private static GameObject? RealBat;
         public static AudioSource AudioSource;
         public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
             Log("Initializing");
             NKG = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Control/Nightmare Grimm Boss"];
+            RealBat = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Control/Grimm Bats/Real Bat"];
             GameObject.DontDestroyOnLoad(NKG);
+            GameObject.DontDestroyOnLoad(RealBat);
 
             var go = new GameObject("AudioSource");
             AudioSource = go.AddComponent<AudioSource>();
@@ -61,26 +67,8 @@ namespace Nightmare_Spark
             Log("Initialized");
         }
 
-        
-
-        private void FSMAwake(On.PlayMakerFSM.orig_Awake orig, PlayMakerFSM self)
-        {
-            orig(self);
-            if (self.FsmName == "Spell Control")
-            {
-                FsmState castShadeSoul = self.GetState("Fireball 2");
-                castShadeSoul.InsertCustomAction("Fireball 2", () => SpawnBat(15), 4);
-                FsmState castVengefulSpirit = self.GetState("Fireball 1");
-                castVengefulSpirit.InsertCustomAction("Fireball 1", () => SpawnBat(10), 4);
-                FsmState castQuakeDive = self.GetState("Q1 Effect");
-                castQuakeDive.InsertCustomAction("Q1 Effect", () => DiveFireballs(15, 24), 4);
-                FsmState castQuakeDark = self.GetState("Q2 Effect");
-                castQuakeDark.InsertCustomAction("Q2 Effect", () => DiveFireballs(20, 36), 4);
-                FsmState castSlug = self.GetState("Focus S");
-                castSlug.InsertCustomAction("Focus S", () => GrimmSlug(), 15);
-            }
-        }
-
+        //--------------------------------------------------------------------------------------------------------//
+                                            //Charm Setup//
         private void InitCallbacks()
         {
             ModHooks.GetPlayerBoolHook += OnGetPlayerBoolHook;
@@ -204,6 +192,95 @@ namespace Nightmare_Spark
         }
 
 
+        //--------------------------------------------------------------------------------------------------------//
+                                            //General//
+        private int gcdamage;
+
+        private void FSMAwake(On.PlayMakerFSM.orig_Awake orig, PlayMakerFSM self)
+        {
+            orig(self);
+            if (self.FsmName == "Spell Control")
+            {
+                FsmState castShadeSoul = self.GetState("Fireball 2");
+                castShadeSoul.InsertCustomAction("Fireball 2", () => SpawnBat(15), 4);
+                FsmState castVengefulSpirit = self.GetState("Fireball 1");
+                castVengefulSpirit.InsertCustomAction("Fireball 1", () => SpawnBat(10), 4);
+                FsmState castQuakeDive = self.GetState("Q1 Effect");
+                castQuakeDive.InsertCustomAction("Q1 Effect", () => DiveFireballs(15, 24), 4);
+                FsmState castQuakeDark = self.GetState("Q2 Effect");
+                castQuakeDark.InsertCustomAction("Q2 Effect", () => DiveFireballs(20, 36), 4);
+                FsmState castSlug = self.GetState("Focus S");
+                castSlug.InsertCustomAction("Focus S", () => GrimmSlug(), 15);
+                FsmState slugAnim = self.GetState("Start Slug Anim");
+                slugAnim.InsertCustomAction("Start Slug Anim", () => GrimmSlugAnim(), 2);
+            }
+        }
+        private bool CheckCharms(string target, bool orig)
+        {
+            if (HeroController.instance == null || HeroController.instance.spellControl == null) { return orig; }
+            FsmState castQuakeDive = HeroController.instance.spellControl.GetState("Q1 Effect");
+            FsmState castQuakeDark = HeroController.instance.spellControl.GetState("Q2 Effect");
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
+            {
+                castQuakeDive.GetAction<CustomFsmAction>(4).Enabled = true;
+                castQuakeDark.GetAction<CustomFsmAction>(4).Enabled = true;
+            }
+            else
+            {
+                castQuakeDive.GetAction<CustomFsmAction>(4).Enabled = false;
+                castQuakeDark.GetAction<CustomFsmAction>(4).Enabled = false;
+            }
+
+            FsmState castShadeSoul = HeroController.instance.spellControl.GetState("Fireball 2");
+            FsmState castVengefulSpirit = HeroController.instance.spellControl.GetState("Fireball 1");
+            if (PlayerData.instance.GetBool("equippedCharm_11") && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
+            {
+                castShadeSoul.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = false;
+                castShadeSoul.GetAction<CustomFsmAction>(4).Enabled = true;
+                castVengefulSpirit.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = false;
+                castVengefulSpirit.GetAction<CustomFsmAction>(4).Enabled = true;
+                int gcLevel = PlayerData.instance.GetInt("grimmChildLevel");
+                if (PlayerData.instance.GetBool("equippedCharm_40") && gcLevel <= 4)
+                {
+
+
+                    gcdamage = gcLevel switch
+                    {
+                        2 => (int)(5 * 1.5f),
+                        3 => (int)(8 * 1.5f),
+                        4 => (int)(11 * 1.5f)
+
+
+                    };
+
+
+                    var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
+                    PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
+                    if (grimmchild != null)
+                    { grimmchild.GetState("Shoot").GetAction<SetFsmInt>(6).setValue = gcdamage; }
+                }
+            }
+            else
+            {
+                castShadeSoul.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = true;
+                castShadeSoul.GetAction<CustomFsmAction>(4).Enabled = false;
+                castVengefulSpirit.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = true;
+                castVengefulSpirit.GetAction<CustomFsmAction>(4).Enabled = false;
+            }
+            FsmState castSlug = HeroController.instance.spellControl.GetState("Focus S");
+            if (PlayerData.instance.GetBool("equippedCharm_28") && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
+            {
+                castSlug.GetAction<CustomFsmAction>(15).Enabled = true;
+            }
+            else
+            {
+                castSlug.GetAction<CustomFsmAction>(15).Enabled = false;
+            }
+            return orig;
+
+        }
+        //--------------------------------------------------------------------------------------------------------//
+                                            //Monobehaviours//
         public class MyMonoBehaviourForBats : MonoBehaviour
         {
             Rigidbody2D? rb2d;
@@ -290,75 +367,85 @@ namespace Nightmare_Spark
             }
         }
 
-        private int gcdamage;
-        private bool CheckCharms(string target, bool orig)
+        [RequireComponent(typeof(LineRenderer))]
+        public class Circle : MonoBehaviour
         {
-            if (HeroController.instance == null || HeroController.instance.spellControl == null) { return orig; }
-            FsmState castQuakeDive = HeroController.instance.spellControl.GetState("Q1 Effect");
-            FsmState castQuakeDark = HeroController.instance.spellControl.GetState("Q2 Effect");
-            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
-            {
-                castQuakeDive.GetAction<CustomFsmAction>(4).Enabled = true;
-                castQuakeDark.GetAction<CustomFsmAction>(4).Enabled = true;
-            }
-            else
-            {
-                castQuakeDive.GetAction<CustomFsmAction>(4).Enabled = false;
-                castQuakeDark.GetAction<CustomFsmAction>(4).Enabled = false;
-            }
+            [Range(0, 55)]
+            public int segments = 70;
+            [Range(0, 5)]
+            public float xradius = GrimmSlugIndicatorRange;
+            [Range(0, 5)]
+            public float yradius = GrimmSlugIndicatorRange;
+            LineRenderer limit;
 
-            FsmState castShadeSoul = HeroController.instance.spellControl.GetState("Fireball 2");
-            FsmState castVengefulSpirit = HeroController.instance.spellControl.GetState("Fireball 1");
-            if (PlayerData.instance.GetBool("equippedCharm_11") && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
+            public Color startColor = Color.red;
+            public Color endColor = Color.red;
+            private void Start()
             {
-                castShadeSoul.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = false;
-                castShadeSoul.GetAction<CustomFsmAction>(4).Enabled = true;
-                castVengefulSpirit.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = false;
-                castVengefulSpirit.GetAction<CustomFsmAction>(4).Enabled = true;
-                int gcLevel = PlayerData.instance.GetInt("grimmChildLevel");
-                if (PlayerData.instance.GetBool("equippedCharm_40") && gcLevel <= 4)
+                limit = gameObject.GetComponent<LineRenderer>();
+                limit.material = new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
+                limit.name = "Limit";
+                limit.startWidth = .2f;
+                limit.endWidth = .2f;
+                limit.SetVertexCount(segments + 1);
+                limit.useWorldSpace = false;
+                CreatePoints();
+                float alpha = 1.0f;
+                Gradient gradient = new Gradient();
+                gradient.SetKeys(
+                    new GradientColorKey[] { new GradientColorKey(startColor, 1.0f), new GradientColorKey(endColor, 1.0f) },
+                    new GradientAlphaKey[] { new GradientAlphaKey(alpha, 1.0f), new GradientAlphaKey(alpha, 1.0f) }
+                );
+                limit.colorGradient = gradient;
+
+            }
+            void CreatePoints()
+            {
+                float x;
+                float y;
+                float z;
+
+                float angle = 20f;
+
+                for (int i = 0; i < (segments + 1); i++)
                 {
+                    x = Mathf.Sin(Mathf.Deg2Rad * angle) * xradius;
+                    y = Mathf.Cos(Mathf.Deg2Rad * angle) * yradius;
 
+                    limit.SetPosition(i, new Vector3(x, y, 0));
 
-                    gcdamage = gcLevel switch
-                    {
-                        2 => (int)(5 * 1.5f),
-                        3 => (int)(8 * 1.5f),
-                        4 => (int)(11 * 1.5f)
-
-
-                    };
-
-
-                    var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-                    PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
-                    if (grimmchild != null)
-                    { grimmchild.GetState("Shoot").GetAction<SetFsmInt>(6).setValue = gcdamage; }
+                    angle += (360f / segments);
                 }
             }
-            else
+            private Vector3 previousheropos;
+            public void LateUpdate()
             {
-                castShadeSoul.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = true;
-                castShadeSoul.GetAction<CustomFsmAction>(4).Enabled = false;
-                castVengefulSpirit.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = true;
-                castVengefulSpirit.GetAction<CustomFsmAction>(4).Enabled = false;
-            }
-            FsmState castSlug = HeroController.instance.spellControl.GetState("Focus S");
-            if (PlayerData.instance.GetBool("equippedCharm_28") && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
-            {
-                castSlug.GetAction<CustomFsmAction>(15).Enabled = true;
-            }
-            else
-            {
-                castSlug.GetAction<CustomFsmAction>(15).Enabled = false;
-            }
-            return orig;
+                var HCpos = HeroController.instance.transform.position;
 
+                var diff = new Vector2(HCpos.x - tether.x, HCpos.y - tether.y);
+                if (diff.magnitude > GrimmSlugIndicatorRange)
+                {
+                    HeroController.instance.transform.position = previousheropos;
+                }
+                else
+                {
+                    previousheropos = HCpos;
+                }
+
+            }
         }
+        
 
+        //--------------------------------------------------------------------------------------------------------//
+                                            //Grimm Slug//
         private readonly FieldInfo[] heroActionFields = typeof(HeroActions).GetFields(BindingFlags.Instance | BindingFlags.Public);
+        private static GameObject? Bat;
+        public int GrimmSlugVelocity;
+        public static int GrimmSlugIndicatorRange;   
+        private static Vector2 tether;
+        private static float tetherx;
+        private static float tethery;
         public bool gsActive = false;
-
 
         private void GrimmSlugMovement()
         {
@@ -381,16 +468,16 @@ namespace Nightmare_Spark
                                     switch (actionName)
                                     {
                                         case "up":
-                                            gsvertical = 5;
+                                            gsvertical = GrimmSlugVelocity;
                                             break;
                                         case "down":
-                                            gsvertical = -5;
+                                            gsvertical = -GrimmSlugVelocity;
                                             break;
                                         case "right":
-                                            gshorizontal = 5;
+                                            gshorizontal = GrimmSlugVelocity;
                                             break;
                                         case "left":
-                                            gshorizontal = -5;
+                                            gshorizontal = -GrimmSlugVelocity;
                                             break;
                                         default:
                                             gshorizontal = 0;
@@ -402,11 +489,17 @@ namespace Nightmare_Spark
                                     HeroController.instance.GetComponent<Rigidbody2D>().velocity = new Vector2(gshorizontal, gsvertical);
 
                                 }
+
                             }
                         }
                     }
                 }
             }
+            if (Bat != null)
+            {
+                Bat.transform.position = HeroController.instance.transform.position;
+            }
+            
             var sc = HeroController.instance.spellControl;
             if (gsActive && !sc.GetState("Focus Cancel 2").GetAction<SetBoolValue>(16).boolVariable.Value || gsActive && !sc.GetState("Focus Get Finish 2").GetAction<SetBoolValue>(15).boolVariable.Value)
             {
@@ -419,51 +512,12 @@ namespace Nightmare_Spark
                 HeroController.instance.AffectedByGravity(true);
 
 
-            }
-        }
+                Bat.SetActive(false);
 
-        [RequireComponent(typeof(LineRenderer))]
-        public class Circle : MonoBehaviour
-        {
-            [Range(0, 55)]
-            public int segments = 55;
-            [Range(0, 5)]
-            public float xradius = 5;
-            [Range(0, 5)]
-            public float yradius = 5;
-            LineRenderer limit;
-            private void Start()
-            {
-                limit = gameObject.GetComponent<LineRenderer>();
-                limit.name = "Limit";
-                limit.startWidth = .5f;
-                limit.endWidth = .5f;
-                limit.startColor = new Color32(1, 0, 0, 1);
-                limit.endColor = new Color32(1, 0, 0, 1);
-                limit.SetVertexCount(segments + 1);
-                limit.useWorldSpace = false;
-                CreatePoints();
 
             }
-            void CreatePoints()
-            {
-                float x;
-                float y;
-                float z;
 
-                float angle = 20f;
-
-                for (int i = 0; i < (segments + 1); i++)
-                {
-                    x = Mathf.Sin(Mathf.Deg2Rad * angle) * xradius;
-                    y = Mathf.Cos(Mathf.Deg2Rad * angle) * yradius;
-
-                    limit.SetPosition(i, new Vector3(x, y, 0));
-
-                    angle += (360f / segments);
-                }
-            }
-        }
+        }  
         private void GrimmSlug()
         {
             var sc = HeroController.instance.spellControl;
@@ -474,24 +528,76 @@ namespace Nightmare_Spark
             sc.RemoveTransition("Focus Left", "LEFT GROUND");
             sc.RemoveTransition("Focus Right", "LEFT GROUND");
 
+            Bat = GameObject.Instantiate(RealBat);
+            GameObject.DontDestroyOnLoad(Bat);
+            Bat.SetActive(true);
+            Bat.RemoveComponent<HealthManager>();
+            Bat.LocateMyFSM("Control").GetState("Position").GetAction<Tk2dPlayAnimation>(3).Active = true;
+            
+
+            if (PlayerData.instance.GetBool($"equippedCharm_7"))
+            {
+                if (PlayerData.instance.GetBool($"equippedCharm_34"))
+                {
+                    // Quick Focus + Deep Focus 
+                    GrimmSlugVelocity = 12;
+                    GrimmSlugIndicatorRange = 7;
+                }
+                else
+                {
+                    // Quick Focus
+                    GrimmSlugVelocity = 18;
+                    GrimmSlugIndicatorRange = 5;
+                }
+            }
+            else
+            {
+                if (PlayerData.instance.GetBool("equippedCharm_34"))
+                {
+                    // Deep Focus
+                    GrimmSlugVelocity = 9;
+                    GrimmSlugIndicatorRange = 8;
+                }
+                else
+                {
+                    // Base
+                    GrimmSlugVelocity = 15;
+                    GrimmSlugIndicatorRange = 6;
+                }
+            }
+
+
             gsActive = true;
 
+            tether = HeroController.instance.transform.position;
+            tetherx = HeroController.instance.transform.position.x;
+            tethery = HeroController.instance.transform.position.y;
             GameObject go = new GameObject();
             go.name = "go";
             go.AddComponent<Circle>();
-            GameObject.Instantiate(go).transform.position = HeroController.instance.transform.position - new Vector3(0, 0, 0);
+            go.transform.position = HeroController.instance.transform.position - new Vector3(0, 1.1f, 0);
             GameManager.instance.StartCoroutine(Timer(go));
+
+        }
+        private void GrimmSlugAnim()
+        {
+            //GameObject Bat = RealBat.LocateMyFSM("Control").GetState("Init").GetAction<GetOwner>(1).storeGameObject.Value;
+
 
         }
         private IEnumerator Timer(GameObject go)
         {
-            yield return new WaitWhile(() => HeroController.instance.spellControl.GetState("Focus Cancel 2").GetAction<SetBoolValue>(16).boolVariable.Value || HeroController.instance.spellControl.GetState("Focus Get Finished 2").GetAction<SetBoolValue>(15).boolVariable.Value)
+            yield return new WaitWhile(() => HeroController.instance.spellControl.FsmVariables.FindFsmBool("Focusing").Value)
             {
-                
+
             };
             GameObject.Destroy(go);
 
+
         }
+
+        //--------------------------------------------------------------------------------------------------------//
+                                            //Dive Fireballs//
         private void DiveFireballs(int damage, int spread)
         {
             int x = spread;
@@ -510,6 +616,8 @@ namespace Nightmare_Spark
 
         }
 
+        //--------------------------------------------------------------------------------------------------------//
+                                            //Firebat Spell//
         private string SpawnBat(int spellLevel)
         {
             if (PlayerData.instance.GetBool("equippedCharm_10"))
@@ -532,7 +640,7 @@ namespace Nightmare_Spark
                 {
                     GameObject.Destroy(DH);
                 }
-                
+
                 Firebat.AddComponent<MonoBehaviourForBigBat>();
                 GameObject.DontDestroyOnLoad(Firebat);
                 Firebat.transform.position = HeroController.instance.transform.position - new Vector3(0, 0.5f, 0);
@@ -603,8 +711,46 @@ namespace Nightmare_Spark
             orig(self, hitInstance);
         }
 
+        //--------------------------------------------------------------------------------------------------------//
+                                            //Fire Trail//
+
         private readonly int numberOfSpawns = 8;
         private readonly float Rate = 15f;
+
+        private bool StartTrail()
+        {
+            if (Satchel.Reflected.HeroControllerR.CanDash() == true && (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}")))
+            {
+                float duration;
+                if (PlayerData.instance.GetBool("equippedCharm_31"))
+                {
+                    duration = 1f;
+                }
+                else
+                {
+                    duration = 1.75f;
+                }
+
+                if (!cooldown)
+                {
+
+                    GameManager.instance.StartCoroutine(TrailCoroutine());
+                    GameManager.instance.StartCoroutine(TrailCooldown(duration));
+                    return false;
+                }
+                else
+                {
+
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private bool cooldown = false;
         private IEnumerator TrailCoroutine()
         {
             yield return new WaitWhile(() => HeroController.instance == null);
@@ -639,8 +785,6 @@ namespace Nightmare_Spark
 
             }
         }
-
-        private bool cooldown = false;
         private IEnumerator TrailCooldown(float duration)
         {
             cooldown = true;
@@ -649,38 +793,8 @@ namespace Nightmare_Spark
 
             cooldown = false;
         }
-        private bool StartTrail()
-        {
-            if (Satchel.Reflected.HeroControllerR.CanDash() == true && (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}")))
-            {
-                float duration;
-                if (PlayerData.instance.GetBool("equippedCharm_31"))
-                {
-                    duration = 1f;
-                }
-                else
-                {
-                    duration = 1.75f;
-                }
-
-                if (!cooldown)
-                {
-
-                    GameManager.instance.StartCoroutine(TrailCoroutine());
-                    GameManager.instance.StartCoroutine(TrailCooldown(duration));
-                    return false;
-                }
-                else
-                {
-
-                    return false;
-                }
-            }
-            else
-            {
-                return false;
-            }
-        }
+        //--------------------------------------------------------------------------------------------------------//
+                                            //Other//
         public static DamageEnemies AddDamageEnemy(GameObject go)
         {
             var dmg = go.GetAddComponent<DamageEnemies>();
