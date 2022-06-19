@@ -86,15 +86,15 @@ namespace Nightmare_Spark
             SaveSettings.newCharms = SaveSettings.newCharms;
             SaveSettings.equippedCharms = SaveSettings.equippedCharms;
             SaveSettings.charmCosts = SaveSettings.charmCosts;
-            SaveSettings.dwarfPogo = SaveSettings.dwarfPogo;
+            SaveSettings.dP = SaveSettings.dP; //Dwarf Pogo :dwarfwoot:
         }
 
-        private string[] _charmNames =
+        private readonly string[] _charmNames =
         {
             "Nightmare Spark",
 
         };
-        private string[] _charmDescriptions =
+        private readonly string[] _charmDescriptions =
         {
             "A remnant of the Nightmare King's power,<br>still resonating with the everburning fire of the Troupe.<br><br>Dashing leaves a fire trail behind which<br>can damage enemies",
 
@@ -211,8 +211,7 @@ namespace Nightmare_Spark
                 castQuakeDark.InsertCustomAction("Q2 Effect", () => DiveFireballs(20, 36), 4);
                 FsmState castSlug = self.GetState("Focus S");
                 castSlug.InsertCustomAction("Focus S", () => GrimmSlug(), 15);
-                FsmState slugAnim = self.GetState("Start Slug Anim");
-                slugAnim.InsertCustomAction("Start Slug Anim", () => GrimmSlugAnim(), 2);
+                FsmState slugLeft = self.GetState("Focus Left");
             }
         }
         private bool CheckCharms(string target, bool orig)
@@ -438,7 +437,6 @@ namespace Nightmare_Spark
 
         //--------------------------------------------------------------------------------------------------------//
                                             //Grimm Slug//
-        private readonly FieldInfo[] heroActionFields = typeof(HeroActions).GetFields(BindingFlags.Instance | BindingFlags.Public);
         private static GameObject? Bat;
         public int GrimmSlugVelocity;
         public static int GrimmSlugIndicatorRange;   
@@ -449,58 +447,65 @@ namespace Nightmare_Spark
 
         private void GrimmSlugMovement()
         {
+            var sc = HeroController.instance.spellControl;
             if (gsActive)
             {
                 int gsvertical = 0;
                 int gshorizontal = 0;
-                foreach (var heroActionField in heroActionFields)
+                var heroActions = InputHandler.Instance.inputActions;
+                
+
+                if (heroActions.up.IsPressed)
                 {
-                    string actionName = heroActionField.Name;
-                    if (heroActionField.GetValue(InputHandler.Instance.inputActions) is PlayerAction playerAction)
+                    gsvertical = GrimmSlugVelocity;
+                }
+                else
+                {
+                    if (heroActions.down.IsPressed)
                     {
-                        if (playerAction.IsPressed)
-                        {
-                            for (int i = 0; i < MyVars.strActions.Length; i++)
-                            {
-
-                                if (MyVars.strActions[i] == actionName)
-                                {
-                                    switch (actionName)
-                                    {
-                                        case "up":
-                                            gsvertical = GrimmSlugVelocity;
-                                            break;
-                                        case "down":
-                                            gsvertical = -GrimmSlugVelocity;
-                                            break;
-                                        case "right":
-                                            gshorizontal = GrimmSlugVelocity;
-                                            break;
-                                        case "left":
-                                            gshorizontal = -GrimmSlugVelocity;
-                                            break;
-                                        default:
-                                            gshorizontal = 0;
-                                            gsvertical = 0;
-                                            break;
-
-
-                                    };
-                                    HeroController.instance.GetComponent<Rigidbody2D>().velocity = new Vector2(gshorizontal, gsvertical);
-
-                                }
-
-                            }
-                        }
+                        gsvertical = -GrimmSlugVelocity;
+                    }
+                    else
+                    {
+                        gsvertical = 0;
                     }
                 }
+
+                if (heroActions.right.IsPressed)
+                {
+                    gshorizontal = GrimmSlugVelocity;   
+                    Bat.transform.localScale = new Vector3(1, 1, 1);
+                    
+                }
+                else
+                {
+                    if (heroActions.left.IsPressed)
+                    {
+                        gshorizontal = -GrimmSlugVelocity;
+                        Bat.transform.localScale = new Vector3(-1, 1, 1);
+                    }
+                    else
+                    {
+                        gshorizontal = 0;
+                    }
+                }
+                
+                sc.GetState("Focus S").GetAction<SetParticleEmissionRate>(9).emissionRate.Value = 0f;
+                sc.GetState("Focus S").GetAction<SetParticleEmissionRate>(10).emissionRate.Value = 0f;
+                sc.GetState("Focus Left").GetAction<SetParticleEmissionRate>(9).emissionRate.Value = 0f;
+                sc.GetState("Focus Left").GetAction<SetParticleEmissionRate>(10).emissionRate.Value = 0f;
+                sc.GetState("Focus Right").GetAction<SetParticleEmissionRate>(9).emissionRate.Value = 0f;
+                sc.GetState("Focus Right").GetAction<SetParticleEmissionRate>(10).emissionRate.Value = 0f;
+                HeroController.instance.GetComponent<Rigidbody2D>().velocity = new Vector2(gshorizontal, gsvertical);
+
             }
+
             if (Bat != null)
             {
-                Bat.transform.position = HeroController.instance.transform.position;
+                Bat.transform.position = HeroController.instance.transform.position - new Vector3(0,1,0);
             }
             
-            var sc = HeroController.instance.spellControl;
+            
             if (gsActive && !sc.GetState("Focus Cancel 2").GetAction<SetBoolValue>(16).boolVariable.Value || gsActive && !sc.GetState("Focus Get Finish 2").GetAction<SetBoolValue>(15).boolVariable.Value)
             {
                 gsActive = false;
@@ -510,11 +515,12 @@ namespace Nightmare_Spark
                 sc.AddTransition("Focus Right", "LEFT GROUND", "Grace Check 2");
 
                 HeroController.instance.AffectedByGravity(true);
-
+                HeroController.instance.transform.GetChild(8).GetChild(0).GetComponent<tk2dSprite>().color = new Color(1, 1, 1, 1);
 
                 Bat.SetActive(false);
+                Bat.GetComponent<tk2dSpriteAnimator>().Play("Bat End");
 
-
+                HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = true;
             }
 
         }  
@@ -531,9 +537,16 @@ namespace Nightmare_Spark
             Bat = GameObject.Instantiate(RealBat);
             GameObject.DontDestroyOnLoad(Bat);
             Bat.SetActive(true);
+            GameObject.Destroy(Bat.LocateMyFSM("Control"));
             Bat.RemoveComponent<HealthManager>();
-            Bat.LocateMyFSM("Control").GetState("Position").GetAction<Tk2dPlayAnimation>(3).Active = true;
+            Bat.GetComponent<MeshRenderer>().enabled = true;
+            Bat.GetComponent<tk2dSpriteAnimator>().Play("Bat TurnToFly");
+            Bat.GetComponent<tk2dSpriteAnimator>().Play("Bat Fly");
+
+            HeroController.instance.transform.GetChild(8).GetChild(0).GetComponent<tk2dSprite>().color = new Color(0.7f, 0, 0, 1);
             
+
+            HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = false;
 
             if (PlayerData.instance.GetBool($"equippedCharm_7"))
             {
@@ -579,12 +592,8 @@ namespace Nightmare_Spark
             GameManager.instance.StartCoroutine(Timer(go));
 
         }
-        private void GrimmSlugAnim()
-        {
-            //GameObject Bat = RealBat.LocateMyFSM("Control").GetState("Init").GetAction<GetOwner>(1).storeGameObject.Value;
-
-
-        }
+        
+        
         private IEnumerator Timer(GameObject go)
         {
             yield return new WaitWhile(() => HeroController.instance.spellControl.FsmVariables.FindFsmBool("Focusing").Value)
@@ -772,7 +781,7 @@ namespace Nightmare_Spark
 
                 MyTrail.gameObject.GetComponent<ParticleSystem>().startSize = 0.25F;
                 MyTrail.layer = (int)PhysLayers.HERO_ATTACK;
-                if (!SaveSettings.dwarfPogo)
+                if (!SaveSettings.dP)
                 {
                     MyTrail.AddComponent<NonBouncer>();
                 }
