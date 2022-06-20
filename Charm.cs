@@ -17,7 +17,7 @@ namespace Nightmare_Spark
     public class SaveSettings
     {
         // insert default values here
-        public bool[] gotCharms = new[] { true };
+        public bool[] gotCharms = new[] { false };
         public bool[] newCharms = new[] { false };
         public bool[] equippedCharms = new[] { false };
         public int[] charmCosts = new[] { 2 };
