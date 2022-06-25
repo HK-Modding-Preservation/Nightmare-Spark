@@ -39,34 +39,36 @@ namespace Nightmare_Spark
                 ("GG_Grimm_Nightmare", "Grimm Control/Nightmare Grimm Boss"),
                 ("GG_Grimm_Nightmare", "Grimm Control/Grimm Bats/Real Bat"),
                 ("GG_Grimm_Nightmare", "Grimm Spike Holder/Nightmare Spike"),
-                ("GG_Grimm_Nightmare", "Grimm Spike Holder/Nightmare Spike/")
+                ("GG_Grimm", "Grimm Spike Holder/Grimm Spike")
             };
         }
         public static TextureStrings Ts { get; private set; }
         public List<int> CharmIDs { get; private set; }
 
-        private GameObject? MyTrail;
-        private static GameObject? NKG;
-        private static GameObject? Burst;
-        private static GameObject? RealBat;
-        private static GameObject NightmareSpike;
-        public static AudioSource AudioSource;
-        public static tk2dSpriteAnimation SpikeAnimation;
+        private GameObject? myTrail;
+        private static GameObject? nkg;
+        private static GameObject? burst;
+        private static GameObject? realBat;
+        private static GameObject nightmareSpike;
+        private static GameObject grimmSpike;
+        public static AudioSource audioSource;
+        public static tk2dSpriteAnimation spikeAnimation;
         public bool Placed = false;
         public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
             Log("Initializing");
-            NKG = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Control/Nightmare Grimm Boss"];
-            RealBat = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Control/Grimm Bats/Real Bat"];
-            NightmareSpike = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Spike Holder/Nightmare Spike"];
-            GameObject.DontDestroyOnLoad(NKG);
-            GameObject.DontDestroyOnLoad(RealBat);
+            nkg = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Control/Nightmare Grimm Boss"];
+            realBat = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Control/Grimm Bats/Real Bat"];
+            nightmareSpike = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Spike Holder/Nightmare Spike"];
+            grimmSpike = preloadedObjects["GG_Grimm"]["Grimm Spike Holder/Grimm Spike"];
+            GameObject.DontDestroyOnLoad(nkg);
+            GameObject.DontDestroyOnLoad(realBat);
 
             var go = new GameObject("AudioSource");
-            AudioSource = go.AddComponent<AudioSource>();
-            AudioSource.pitch = .75f;
-            AudioSource.volume = .3f;
-            UnityEngine.Object.DontDestroyOnLoad(AudioSource);
+            audioSource = go.AddComponent<AudioSource>();
+            audioSource.pitch = .75f;
+            audioSource.volume = .3f;
+            UnityEngine.Object.DontDestroyOnLoad(audioSource);
 
             CharmIDs = CharmHelper.AddSprites(Ts.Get(TextureStrings.NightmareSparkKey));
 
@@ -341,9 +343,17 @@ namespace Nightmare_Spark
                 if (grimmchild != null)
                 { grimmchild.GetState("Shoot").GetAction<SetFsmInt>(6).setValue = gcdamage; }
             }
-            //if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && gcLevel == 5 && PlayerData.instance.GetBool("equippedCharm_40"))
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && gcLevel == 5 && PlayerData.instance.GetBool("equippedCharm_40"))
             {
-                //NightmareSpikeActivate();
+                if (PlayerData.instance.GetBool("equippedCharm_12"))
+                {
+                    NightmareSpikeActivate();
+                }
+                else
+                {
+                    GrimmSpikeActivate();
+                }
+
             }
 
             //--------Grimm Slug--------//
@@ -360,6 +370,7 @@ namespace Nightmare_Spark
             return orig;
 
         }
+
 
         public class ICSprite : ISprite
         {
@@ -411,16 +422,16 @@ namespace Nightmare_Spark
             }
             void Start()
             {
-                var Firebat = NKG.LocateMyFSM("Control").GetState("Firebat 1");
+                var firebat = nkg.LocateMyFSM("Control").GetState("Firebat 1");
 
                 if (!HeroController.instance)
                 {
                     return;
                 }
-                Nightmare_Spark.AudioSource.pitch = .75f;
-                Nightmare_Spark.AudioSource.volume = .3f;
-                var audioClip = Firebat.GetAction<AudioPlayerOneShotSingle>(8).audioClip.Value as AudioClip;
-                Nightmare_Spark.AudioSource.PlayOneShot(audioClip);
+                Nightmare_Spark.audioSource.pitch = .75f;
+                Nightmare_Spark.audioSource.volume = .3f;
+                var audioClip = firebat.GetAction<AudioPlayerOneShotSingle>(8).audioClip.Value as AudioClip;
+                Nightmare_Spark.audioSource.PlayOneShot(audioClip);
 
                 rb2d = gameObject.GetAddComponent<Rigidbody2D>();
                 var facing = HeroController.instance.cState.facingRight;
@@ -449,8 +460,8 @@ namespace Nightmare_Spark
                 var facing = HeroController.instance.cState.facingRight;
                 gameObject.transform.Find("Impact").GetComponent<Transform>().localPosition = new Vector3(-1.5f, 0.01f, -1f);
                 gameObject.GetComponent<MeshRenderer>().enabled = false;
-                var Firebat = NKG.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value;
-                var impactclip = Firebat.LocateMyFSM("Control").GetState("Impact").GetAction<Tk2dPlayAnimationWithEvents>(11).clipName.Value;
+                var firebat = nkg.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value;
+                var impactclip = firebat.LocateMyFSM("Control").GetState("Impact").GetAction<Tk2dPlayAnimationWithEvents>(11).clipName.Value;
                 gameObject.Find("Impact").GetComponent<tk2dSpriteAnimator>().Play(impactclip);
                 yield return new WaitForSeconds(0.0738f);
                 Destroy(gameObject);
@@ -458,9 +469,9 @@ namespace Nightmare_Spark
 
             void OnDestroy()
             {
-                var impact = NKG.LocateMyFSM("Control").GetState("Impact");
+                var impact = nkg.LocateMyFSM("Control").GetState("Impact");
                 var audioClip = impact.GetAction<AudioPlaySimple>(1).oneShotClip.Value as AudioClip;
-                Nightmare_Spark.AudioSource.PlayOneShot(audioClip);
+                Nightmare_Spark.audioSource.PlayOneShot(audioClip);
             }
         }
         public class MonoBehaviourForBigBat : MonoBehaviour
@@ -473,16 +484,16 @@ namespace Nightmare_Spark
             void Start()
             {
 
-                var Firebat = NKG.LocateMyFSM("Control").GetState("Firebat 1");
+                var firebat = nkg.LocateMyFSM("Control").GetState("Firebat 1");
 
                 if (!HeroController.instance)
                 {
                     return;
                 }
-                Nightmare_Spark.AudioSource.pitch = .75f;
-                Nightmare_Spark.AudioSource.volume = .3f;
-                var audioClip = Firebat.GetAction<AudioPlayerOneShotSingle>(8).audioClip.Value as AudioClip;
-                Nightmare_Spark.AudioSource.PlayOneShot(audioClip);
+                Nightmare_Spark.audioSource.pitch = .75f;
+                Nightmare_Spark.audioSource.volume = .3f;
+                var audioClip = firebat.GetAction<AudioPlayerOneShotSingle>(8).audioClip.Value as AudioClip;
+                Nightmare_Spark.audioSource.PlayOneShot(audioClip);
                 gameObject.transform.Find("Hero Hurter").gameObject.active = false;
                 
                 rb2d = gameObject.GetAddComponent<Rigidbody2D>();
@@ -493,9 +504,9 @@ namespace Nightmare_Spark
             }
             void OnDestroy()
             {
-                var impact = NKG.LocateMyFSM("Control").GetState("Impact");
+                var impact = nkg.LocateMyFSM("Control").GetState("Impact");
                 var audioClip = impact.GetAction<AudioPlaySimple>(1).oneShotClip.Value as AudioClip;
-                Nightmare_Spark.AudioSource.PlayOneShot(audioClip);
+                Nightmare_Spark.audioSource.PlayOneShot(audioClip);
                 gameObject.transform.Find("Impact").gameObject.active = true;
                 gameObject.GetComponent<tk2dSpriteAnimator>().Play("Impact");
             }
@@ -670,7 +681,7 @@ namespace Nightmare_Spark
             sc.RemoveTransition("Focus Left", "LEFT GROUND");
             sc.RemoveTransition("Focus Right", "LEFT GROUND");
 
-            Bat = GameObject.Instantiate(RealBat);
+            Bat = GameObject.Instantiate(realBat);
             Bat.SetActive(true);
             GameObject.Destroy(Bat.LocateMyFSM("Control"));
             Bat.RemoveComponent<HealthManager>();
@@ -746,123 +757,132 @@ namespace Nightmare_Spark
             int x = spread;
             for (int i = -x; i <= x; i += 12)
             {
-                var Fireball = GameObject.Instantiate(NKG.LocateMyFSM("Control").GetState("UP Explode").GetAction<SpawnObjectFromGlobalPool>(10).gameObject.Value);
-                Fireball.RemoveComponent<DamageHero>();
-                AddDamageEnemy(Fireball).damageDealt = damage;
-                Fireball.layer = (int)PhysLayers.HERO_ATTACK;
-                GameObject.DontDestroyOnLoad(Fireball);
-                var rb2d = Fireball.GetComponent<Rigidbody2D>();
+                var fireball = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("UP Explode").GetAction<SpawnObjectFromGlobalPool>(10).gameObject.Value);
+                fireball.RemoveComponent<DamageHero>();
+                AddDamageEnemy(fireball).damageDealt = damage;
+                fireball.layer = (int)PhysLayers.HERO_ATTACK;
+                GameObject.DontDestroyOnLoad(fireball);
+                var rb2d = fireball.GetComponent<Rigidbody2D>();
                 rb2d.velocity = new Vector2(i, 1);
-                Fireball.transform.position = HeroController.instance.transform.position - new Vector3(0, 0, 0);
+                fireball.transform.position = HeroController.instance.transform.position - new Vector3(0, 0, 0);
             }
 
 
         }
 
         //--------------------------------------------------------------------------------------------------------//
-                                            //Carefree Spikes//
-                                                  //WIP//
-        /*public class SpikeMonoBehaviour : MonoBehaviour
+        //Carefree Spikes//
+        //WIP//
+        public class NightmareSpikeMonoBehaviour : MonoBehaviour
         {
             void Start()
             {
-                
-                gameObject.GetComponent<tk2dSpriteAnimator>().AnimationCompleted += (caller, clip) =>
-                {
+                GameManager.instance.StartCoroutine(SpikeAnimations());
 
-                    if (clip.name == "Spike Ready")
-                    {
-                        Modding.Logger.Log("Spike Ready");
-                        gameObject.GetComponent<tk2dSpriteAnimator>().AnimationCompleted += (caller, clip) =>
-                        {
-
-                            if (clip.name == "Spike Antic")
-                            {
-                                Modding.Logger.Log("Spike Antic");
-                                gameObject.GetComponent<tk2dSpriteAnimator>().AnimationCompleted += (caller, clip) =>
-                                {
-
-                                    if (clip.name == "Spike Up")
-                                    {
-                                        Modding.Logger.Log("Spike Up");
-                                        gameObject.GetComponent<SetPolygonCollider>().active = true;
-                                        gameObject.GetComponent<tk2dSpriteAnimator>().AnimationCompleted += (caller, clip) =>
-                                        {
-
-                                            if (clip.name == "Spike Down")
-                                            {
-                                                Modding.Logger.Log("Spike Down");
-                                                gameObject.GetComponent<SetPolygonCollider>().active = false;
-                                                GameObject.Destroy(gameObject);
-                                            }
-                                            else
-                                            {
-                                                Modding.Logger.Log($"Wrong clip = Clip: {clip.name}");
-
-                                            }
-                                        };
-                                    }
-                                    else
-                                    {
-                                        Modding.Logger.Log($"Wrong clip = Clip: {clip.name}");
-
-                                    }
-                                };
-                            }
-                            else
-                            {
-                                Modding.Logger.Log($"Wrong clip = Clip: {clip.name}");
-
-                            }
-                        };
-                    }
-                    else
-                    {
-                        Modding.Logger.Log($"Wrong clip = Clip: {clip.name}");
-
-                    }
-                };
+            }
+            IEnumerator SpikeAnimations()
+            {
+                var spikecollider = gameObject.GetComponent<PolygonCollider2D>();
+                var clipready = nightmareSpike.LocateMyFSM("Control").GetState("Ready").GetAction<Tk2dPlayAnimation>(1).clipName.Value;
+                var clipantic = nightmareSpike.LocateMyFSM("Control").GetState("Antic").GetAction<Tk2dPlayAnimationWithEvents>(0).clipName.Value;
+                var clipup = nightmareSpike.LocateMyFSM("Control").GetState("Up").GetAction<Tk2dPlayAnimation>(0).clipName.Value;
+                var clipdown = nightmareSpike.LocateMyFSM("Control").GetState("Down").GetAction<Tk2dPlayAnimationWithEvents>(0).clipName.Value;
+                gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipready);
+                yield return new WaitForSeconds(2.0015f);
+                gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipantic);
+                yield return new WaitForSeconds(0.2013f);
+                gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipup);
+                spikecollider.enabled = true;
+                yield return new WaitForSeconds(0.7052f);
+                gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipdown);
+                spikecollider.enabled = false;
+                yield return new WaitForSeconds(0.2018f);
+                Destroy(gameObject);
             }
         }
+        public class GrimmSpikeMonoBehaviour : MonoBehaviour
+        {
+            void Start()
+            {
+                GameManager.instance.StartCoroutine(SpikeAnimations());
+
+            }
+            IEnumerator SpikeAnimations()
+            {
+                var spikecollider = gameObject.GetComponent<PolygonCollider2D>();
+                spikecollider.enabled = false;
+                var clipready = grimmSpike.LocateMyFSM("Control").GetState("Ready").GetAction<Tk2dPlayAnimation>(1).clipName.Value;
+                var clipantic = grimmSpike.LocateMyFSM("Control").GetState("Antic").GetAction<Tk2dPlayAnimationWithEvents>(0).clipName.Value;
+                var clipup = grimmSpike.LocateMyFSM("Control").GetState("Up").GetAction<Tk2dPlayAnimation>(0).clipName.Value;
+                var clipdown = grimmSpike.LocateMyFSM("Control").GetState("Down").GetAction<Tk2dPlayAnimationWithEvents>(0).clipName.Value;
+                gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipready);
+                yield return new WaitForSeconds(2.0015f);
+                gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipantic);
+                yield return new WaitForSeconds(0.2013f);
+                gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipup);
+                spikecollider.enabled = true;
+                yield return new WaitForSeconds(0.7052f);
+                gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipdown);
+                spikecollider.enabled = false;
+                yield return new WaitForSeconds(0.2018f);
+                Destroy(gameObject);
+            }
+        }
+
         bool active = false;
         private void NightmareSpikeActivate()
         {
             GameObject carefreeshield = HeroController.instance.carefreeShield;
-            
+
             if (carefreeshield.activeSelf == true && !active)
             {
                 active = true;
-                Log("0");
-                for (float i = 0; i <= 365; i += 40.56f)
+                for (float i = 0; i <= 365; i += 33.1818f)
                 {
-                    Log("Start");
-                    GameObject Spike = GameObject.Instantiate(NightmareSpike);
-                    Log("1");
-                    GameObject.Destroy(Spike.LocateMyFSM("Control"));
-                    GameObject.DontDestroyOnLoad(Spike);
-                    Log("2");
-                    Spike.SetActive(true);
-                    Spike.active = true;
-                    
-                    Spike.AddComponent<SpikeMonoBehaviour>();
-                    Spike.transform.position = HeroController.instance.transform.position;
-                    Log("9");
-                    Spike.transform.rotation = new Quaternion(0, 0, i, 1);
-                    Log("3");
-                    Log("4");
-                    Spike.layer = (int)PhysLayers.HERO_ATTACK;
-                    Log("5");
-                    Spike.RemoveComponent<DamageHero>();
-                    Log("6");
-                    AddDamageEnemy(Spike).damageDealt = 20;
-                    Log("7");
-                    Spike.AddComponent<NonBouncer>();
-                    
-                    Log("20");
-                    Spike.LogWithChildren();
+                    GameObject spike = GameObject.Instantiate(nightmareSpike);
+                    GameObject.Destroy(spike.LocateMyFSM("Control"));
+                    GameObject.DontDestroyOnLoad(spike);
+                    spike.SetActive(true);
+                    spike.active = true;
+                    spike.AddComponent<NightmareSpikeMonoBehaviour>();
+                    spike.transform.position = HeroController.instance.transform.position;
+                    spike.transform.SetRotationZ(i);
+                    spike.layer = (int)PhysLayers.HERO_ATTACK;
+                    GameObject.Destroy(spike.GetComponent<DamageHero>());
+                    GameObject.Destroy(spike.GetComponent<TinkEffect>());
+                    AddDamageEnemy(spike).damageDealt = 30;
+                    spike.AddComponent<NonBouncer>();
                 }
                 GameManager.instance.StartCoroutine(SpikeWait());
-                
+
+            }
+        }
+
+        private void GrimmSpikeActivate()
+        {
+            GameObject carefreeshield = HeroController.instance.carefreeShield;
+
+            if (carefreeshield.activeSelf == true && !active)
+            {
+                active = true;
+                for (float i = 0; i <= 365; i += 45.625f)
+                {
+                    GameObject spike = GameObject.Instantiate(grimmSpike);
+                    GameObject.Destroy(spike.LocateMyFSM("Control"));
+                    GameObject.DontDestroyOnLoad(spike);
+                    spike.GetComponent<MeshRenderer>().enabled = true;
+                    spike.SetActive(true);
+                    spike.active = true;
+                    spike.AddComponent<GrimmSpikeMonoBehaviour>();
+                    spike.transform.position = HeroController.instance.transform.position;
+                    spike.transform.SetRotationZ(i);
+                    spike.layer = (int)PhysLayers.HERO_ATTACK;
+                    GameObject.Destroy(spike.GetComponent<DamageHero>());
+                    GameObject.Destroy(spike.GetComponent<TinkEffect>());
+                    AddDamageEnemy(spike).damageDealt = 20;
+                    spike.AddComponent<NonBouncer>();
+                }
+                GameManager.instance.StartCoroutine(SpikeWait());
             }
         }
         private IEnumerator SpikeWait()
@@ -870,34 +890,34 @@ namespace Nightmare_Spark
             yield return new WaitUntil(() => !HeroController.instance.carefreeShield.activeSelf);
 
             active = false;
-        }*/
+        }
         //--------------------------------------------------------------------------------------------------------//
                                             //Firebat Spell//
         private string SpawnBat(int spellLevel)
         {
             if (PlayerData.instance.GetBool("equippedCharm_10"))
             {
-                GameObject Firebat = GameObject.Instantiate(NKG.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
-                GameObject.Destroy(Firebat.LocateMyFSM("Control"));
-                Firebat.layer = (int)PhysLayers.HERO_ATTACK;
-                var col = Firebat.GetComponent<Collider2D>();
+                GameObject firebat = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
+                GameObject.Destroy(firebat.LocateMyFSM("Control"));
+                firebat.layer = (int)PhysLayers.HERO_ATTACK;
+                var col = firebat.GetComponent<Collider2D>();
                 col.enabled = true;
                 col.isTrigger = true;
                 if (PlayerData.instance.GetBool("equippedCharm_19"))
                 {
-                    AddDamageEnemy(Firebat).damageDealt = (int)((spellLevel * 3) * 1.5f);
+                    AddDamageEnemy(firebat).damageDealt = (int)((spellLevel * 3) * 1.5f);
                 }
                 else
                 {
-                    AddDamageEnemy(Firebat).damageDealt = (int)(spellLevel * 3f);
+                    AddDamageEnemy(firebat).damageDealt = (int)(spellLevel * 3f);
                 }
-                foreach (var DH in Firebat.GetComponentsInChildren<DamageHero>())
+                foreach (var DH in firebat.GetComponentsInChildren<DamageHero>())
                 {
                     GameObject.Destroy(DH);
                 }
-                Firebat.AddComponent<NonBouncer>();
-                Firebat.AddComponent<MonoBehaviourForBigBat>();
-                Firebat.transform.position = HeroController.instance.transform.position - new Vector3(0, 0.5f, 0);
+                firebat.AddComponent<NonBouncer>();
+                firebat.AddComponent<MonoBehaviourForBigBat>();
+                firebat.transform.position = HeroController.instance.transform.position - new Vector3(0, 0.5f, 0);
             }
             else
             {
@@ -912,34 +932,34 @@ namespace Nightmare_Spark
             for (int i = 0; i <= 2; i++)
             {
 
-                GameObject Firebat = GameObject.Instantiate(NKG.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
-                Firebat.AddComponent<MyMonoBehaviourForBats>();
-                GameObject.Destroy(Firebat.LocateMyFSM("Control"));
-                Firebat.layer = (int)PhysLayers.HERO_ATTACK;
-                var col = Firebat.GetComponent<Collider2D>();
+                GameObject firebat = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
+                firebat.AddComponent<MyMonoBehaviourForBats>();
+                GameObject.Destroy(firebat.LocateMyFSM("Control"));
+                firebat.layer = (int)PhysLayers.HERO_ATTACK;
+                var col = firebat.GetComponent<Collider2D>();
                 col.enabled = true;
                 col.isTrigger = true;
 
                 if (PlayerData.instance.GetBool("equippedCharm_19"))
                 {
-                    AddDamageEnemy(Firebat).damageDealt = (int)(damage * 1.5f);
+                    AddDamageEnemy(firebat).damageDealt = (int)(damage * 1.5f);
                 }
                 else
                 {
-                    AddDamageEnemy(Firebat).damageDealt = damage;
+                    AddDamageEnemy(firebat).damageDealt = damage;
                 }
                 
-                foreach (var DH in Firebat.GetComponentsInChildren<DamageHero>())
+                foreach (var DH in firebat.GetComponentsInChildren<DamageHero>())
                 {
                     GameObject.Destroy(DH);
                 }
 
                 //  GameObject.DontDestroyOnLoad(Firebat);
 
-                Firebat.AddComponent<NonBouncer>();
+                firebat.AddComponent<NonBouncer>();
                 var facing = HeroController.instance.cState.facingRight;
                 float x = facing ? -.5f : .5f;
-                Firebat.transform.position = HeroController.instance.transform.position - new Vector3(x, 0.5f, 0);
+                firebat.transform.position = HeroController.instance.transform.position - new Vector3(x, 0.5f, 0);
                 yield return new WaitForSeconds(.25F);
             }
         }
@@ -957,21 +977,21 @@ namespace Nightmare_Spark
             }
             if (hitInstance.Source.GetComponent<MonoBehaviourForBigBat>() != null)
             {
-                Burst = GameObject.Instantiate(NKG.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
-                GameObject.DontDestroyOnLoad(Burst);
-                UnityEngine.Object.Destroy(Burst.LocateMyFSM("damages_hero"));
-                foreach (var DH in Burst.GetComponentsInChildren<DamageHero>())
+                burst = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
+                GameObject.DontDestroyOnLoad(burst);
+                UnityEngine.Object.Destroy(burst.LocateMyFSM("damages_hero"));
+                foreach (var DH in burst.GetComponentsInChildren<DamageHero>())
                 {
                     GameObject.Destroy(DH);
                 }
-                AddDamageEnemy(Burst).damageDealt = 10;
-                Burst.gameObject.GetComponent<ParticleSystem>().startSize = 200;
+                AddDamageEnemy(burst).damageDealt = 10;
+                burst.gameObject.GetComponent<ParticleSystem>().startSize = 200;
 
-                Burst.gameObject.SetScale(1.75f, 1.75f);
-                Burst.layer = (int)PhysLayers.HERO_ATTACK;
-                Burst.AddComponent<NonBouncer>();
-                UnityEngine.Object.Instantiate(Burst);
-                Burst.transform.position = hitInstance.Source.transform.position - new Vector3(0, 0, 0);
+                burst.gameObject.SetScale(1.75f, 1.75f);
+                burst.layer = (int)PhysLayers.HERO_ATTACK;
+                burst.AddComponent<NonBouncer>();
+                UnityEngine.Object.Instantiate(burst);
+                burst.transform.position = hitInstance.Source.transform.position - new Vector3(0, 0, 0);
 
                 //hitInstance.Source.transform.Find("Impact").gameObject.active = true;
                 //hitInstance.Source.GetComponent<tk2dSpriteAnimator>().Play("Impact");
@@ -1041,29 +1061,29 @@ namespace Nightmare_Spark
 
             for (var i = 0; i < numberOfSpawns; i++)
             {
-                MyTrail = GameObject.Instantiate(NKG.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
-                GameObject.DontDestroyOnLoad(MyTrail);
-                UnityEngine.Object.Destroy(MyTrail.LocateMyFSM("damages_hero"));
+                myTrail = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
+                GameObject.DontDestroyOnLoad(myTrail);
+                UnityEngine.Object.Destroy(myTrail.LocateMyFSM("damages_hero"));
                 if (PlayerData.instance.GetBool("equippedCharm_19"))
                 {
-                    AddDamageEnemy(MyTrail).damageDealt = 20;
+                    AddDamageEnemy(myTrail).damageDealt = 20;
                 }
                 else
                 {
-                    AddDamageEnemy(MyTrail);
+                    AddDamageEnemy(myTrail);
                 }
 
-                MyTrail.gameObject.GetComponent<ParticleSystem>().startSize = 0.25F;
-                MyTrail.layer = (int)PhysLayers.HERO_ATTACK;
+                myTrail.gameObject.GetComponent<ParticleSystem>().startSize = 0.25F;
+                myTrail.layer = (int)PhysLayers.HERO_ATTACK;
                 if (!SaveSettings.dP)
                 {
-                    MyTrail.AddComponent<NonBouncer>();
+                    myTrail.AddComponent<NonBouncer>();
                 }
 
                 //Instantiates here
-                UnityEngine.Object.Instantiate(MyTrail);
+                UnityEngine.Object.Instantiate(myTrail);
                 //Delay at 1f/rate
-                MyTrail.transform.position = HeroController.instance.transform.position - new Vector3(0, 0.5F, -0.03f);
+                myTrail.transform.position = HeroController.instance.transform.position - new Vector3(0, 0.5F, -0.03f);
                 yield return new WaitForSeconds(1f / Rate);
 
             }
