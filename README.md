@@ -16,10 +16,10 @@ Shape of Unn: The Knight becomes a bat and can fly around untill the focus finis
 <br>
 
 Hollow Knight Modding Discord server: https://discord.gg/VDsg3HmWuB <br>
-Idea by user EchoKnight#6535 on Discord <br>
+Idea and charm sprite by user EchoKnight#6535 on Discord <br>
 Thanks to Mulhima#2695 and Dandy#8904 for assisting with the creation of this mod! 
 
 Dependencies:
-Satchel
-SFCore
-ItemChanger
+Satchel <br>
+SFCore<br>
+ItemChanger<br>

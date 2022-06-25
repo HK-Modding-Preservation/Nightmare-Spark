@@ -435,10 +435,8 @@ namespace Nightmare_Spark
                 if (collision.gameObject.layer == (int)PhysLayers.TERRAIN)
                 {
                     gameObject.transform.Find("Impact").gameObject.active = true;
-                    //gameObject.GetComponent<tk2dSpriteAnimator>().CurrentClip.name = "Impact";
-                    gameObject.GetComponent<tk2dSpriteAnimator>().Play("Impact");
+                    
                     GameManager.instance.StartCoroutine(Destroy());
-                    AnimationUtils.logTk2dAnimationClips(gameObject.Find("Impact"));
 
                 }
             }
@@ -450,9 +448,11 @@ namespace Nightmare_Spark
                 rb2d.velocity = new Vector3(0, 0, 0);
                 var facing = HeroController.instance.cState.facingRight;
                 gameObject.transform.Find("Impact").GetComponent<Transform>().localPosition = new Vector3(-1.5f, 0.01f, -1f);
-                //gameObject.GetComponent<ParticleSystem>().Play();
                 gameObject.GetComponent<MeshRenderer>().enabled = false;
-                yield return new WaitForSeconds(0.1f);
+                var Firebat = NKG.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value;
+                var impactclip = Firebat.LocateMyFSM("Control").GetState("Impact").GetAction<Tk2dPlayAnimationWithEvents>(11).clipName.Value;
+                gameObject.Find("Impact").GetComponent<tk2dSpriteAnimator>().Play(impactclip);
+                yield return new WaitForSeconds(0.0738f);
                 Destroy(gameObject);
             }
 
@@ -461,8 +461,6 @@ namespace Nightmare_Spark
                 var impact = NKG.LocateMyFSM("Control").GetState("Impact");
                 var audioClip = impact.GetAction<AudioPlaySimple>(1).oneShotClip.Value as AudioClip;
                 Nightmare_Spark.AudioSource.PlayOneShot(audioClip);
-
-                //gameObject.GetComponent<PlayParticleEmitter>().
             }
         }
         public class MonoBehaviourForBigBat : MonoBehaviour
@@ -915,6 +913,7 @@ namespace Nightmare_Spark
             {
 
                 GameObject Firebat = GameObject.Instantiate(NKG.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
+                Firebat.AddComponent<MyMonoBehaviourForBats>();
                 GameObject.Destroy(Firebat.LocateMyFSM("Control"));
                 Firebat.layer = (int)PhysLayers.HERO_ATTACK;
                 var col = Firebat.GetComponent<Collider2D>();
@@ -929,7 +928,7 @@ namespace Nightmare_Spark
                 {
                     AddDamageEnemy(Firebat).damageDealt = damage;
                 }
-                Firebat.AddComponent<MyMonoBehaviourForBats>();
+                
                 foreach (var DH in Firebat.GetComponentsInChildren<DamageHero>())
                 {
                     GameObject.Destroy(DH);
@@ -948,13 +947,11 @@ namespace Nightmare_Spark
         {
             if (hitInstance.Source.GetComponent<MyMonoBehaviourForBats>() != null)
             {
-                Log("Hit Enemy");
                 Log(hitInstance.Source);
                 hitInstance.Source.transform.Find("Impact").gameObject.active = true;
                 //gameObject.GetComponent<tk2dSpriteAnimator>().CurrentClip.name = "Impact";
                 //gameObject.GetComponent<tk2dSpriteAnimator>().Play();
                 hitInstance.Source.GetComponent<tk2dSpriteAnimator>().Play("Impact");
-                Log("Starting Coroutine");
                 GameManager.instance.StartCoroutine(DestroyBat(hitInstance.Source));
                 //AnimationUtils.logTk2dAnimationClips(hitInstance.Source.Find("Impact"));
             }
@@ -993,10 +990,8 @@ namespace Nightmare_Spark
             Log("Set velocity and facing");
             //gameObject.GetComponent<ParticleSystem>().Play();
             go.GetComponent<MeshRenderer>().enabled = false;
-            Log("Hid bat");
             yield return new WaitForSeconds(0.1f);
             GameObject.Destroy(go);
-            Log("Destroy");
         }
 
         //--------------------------------------------------------------------------------------------------------//
