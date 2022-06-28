@@ -837,7 +837,7 @@ namespace Nightmare_Spark
             if (carefreeshield.activeSelf == true && !active)
             {
                 active = true;
-                for (float i = 0; i <= 365; i += 33.1818f)
+                for (float i = 0; i <= 360; i += 30)
                 {
                     GameObject spike = GameObject.Instantiate(nightmareSpike);
                     GameObject.Destroy(spike.LocateMyFSM("Control"));
@@ -865,7 +865,7 @@ namespace Nightmare_Spark
             if (carefreeshield.activeSelf == true && !active)
             {
                 active = true;
-                for (float i = 0; i <= 365; i += 45.625f)
+                for (float i = 0; i <= 360; i += 45)
                 {
                     GameObject spike = GameObject.Instantiate(grimmSpike);
                     GameObject.Destroy(spike.LocateMyFSM("Control"));
@@ -979,11 +979,7 @@ namespace Nightmare_Spark
             {
                 burst = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
                 GameObject.DontDestroyOnLoad(burst);
-                UnityEngine.Object.Destroy(burst.LocateMyFSM("damages_hero"));
-                foreach (var DH in burst.GetComponentsInChildren<DamageHero>())
-                {
-                    GameObject.Destroy(DH);
-                }
+                UnityEngine.Object.DestroyImmediate(burst.LocateMyFSM("damages_hero"));
                 AddDamageEnemy(burst).damageDealt = 10;
                 burst.gameObject.GetComponent<ParticleSystem>().startSize = 200;
 
