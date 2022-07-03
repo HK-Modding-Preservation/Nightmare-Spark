@@ -9,10 +9,13 @@ Charm can also be acquired with Debug Mods "Give All Charms" button/keybind, or 
 <br>
 Flukenest: Replaces the fluke spell with a burst of 3 firebats that deal considerable damage. Damage is buffed by Shamans Stone.<br>
 Flukenest + Defenders Crest: Fires a single massive, slow-moving firebat that causes a huge explosion on impact. <br> 
-Grimmchild: Grimmchild deals 50% more damage.<br>
 Dash Master: Decreases the cooldown time for the flame trail.<br>
 ??? (No charm): Adds a rain of fireballs at the start of the dive spell. Fireball count and damage scale with spell level, 5 fireballs at level 1 and 7 at level 2 <br>
 Shape of Unn: The Knight becomes a bat and can fly around untill the focus finishes. Speed of the bat and range scales with deep focus & quick focus <br>
+Grimmchild: Increase Grimmchild enemy detection range by 50%. Every 3rd shot Grimmchild fires will have 1 of 3 effects based on distance from it's target.<br> 
+1. At close range Grimmchild will fire a larger fireball that will explode into a pillar of fire on impact.<br>
+2. At medium range Grimmchild will fire 4 extra fireballs for a total of 5 in a volley of 3 then 2.<br>
+3. At long range Grimmchild will eject a spiral of fireballs <br>
 <br>
 
 Hollow Knight Modding Discord server: https://discord.gg/VDsg3HmWuB <br>

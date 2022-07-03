@@ -116,7 +116,7 @@
             {
                 var flameball = GameObject.Instantiate(grimmkinLarge.LocateMyFSM("Control").GetState("Spiral Med").GetAction<SpawnObjectFromGlobalPool>(3).gameObject.Value);
                 flameball.RemoveComponent<DamageHero>();
-                Nightmare_Spark.AddDamageEnemy(flameball);
+                Nightmare_Spark.AddDamageEnemy(flameball).damageDealt = 18;
                 flameball.layer = (int)PhysLayers.HERO_ATTACK;
                 flameball.transform.position = grimmchild.transform.position;
                 flameball.LocateMyFSM("Control").FsmVariables.FindFsmFloat("Angle").Value = i;
@@ -140,8 +140,12 @@
                 {
                     var grimmkinLarge = Nightmare_Spark.grimmkinSpawner.LocateMyFSM("Spawn Control").GetState("Level 3").GetAction<CreateObject>(0).gameObject.Value;
                     var pillar = GameObject.Instantiate(grimmkinLarge.LocateMyFSM("Control").GetState("Spawn Pillar").GetAction<SpawnObjectFromGlobalPool>(0).gameObject.Value);
-                    Nightmare_Spark.AddDamageEnemy(pillar);
+                    Nightmare_Spark.AddDamageEnemy(pillar).damageDealt = 12;
+                    Nightmare_Spark.AddDamageEnemy(pillar.Find("Pillar")).damageDealt = 12;
+                    Nightmare_Spark.AddDamageEnemy(pillar.Find("Pt Afterburn")).damageDealt = 12;
                     pillar.layer = (int)PhysLayers.HERO_ATTACK;
+                    pillar.Find("Pillar").layer = (int)PhysLayers.HERO_ATTACK;
+                    pillar.Find("Pt Afterburn").layer = (int)PhysLayers.HERO_ATTACK;
                     pillar.RemoveComponent<DamageHero>();
                     GameObject.Destroy(pillar.Find("Pt Afterburn").LocateMyFSM("damages_hero"));
                     GameObject.Destroy(pillar.Find("Pillar").LocateMyFSM("damages_hero"));
@@ -165,9 +169,9 @@
                     var impactpoint = gameObject.transform.position;
                     var grimmkinLarge = Nightmare_Spark.grimmkinSpawner.LocateMyFSM("Spawn Control").GetState("Level 3").GetAction<CreateObject>(0).gameObject.Value;
                     var pillar = GameObject.Instantiate(grimmkinLarge.LocateMyFSM("Control").GetState("Spawn Pillar").GetAction<SpawnObjectFromGlobalPool>(0).gameObject.Value);
-                    Nightmare_Spark.AddDamageEnemy(pillar);
-                    Nightmare_Spark.AddDamageEnemy(pillar.Find("Pillar"));
-                    Nightmare_Spark.AddDamageEnemy(pillar.Find("Pt Afterburn"));
+                    Nightmare_Spark.AddDamageEnemy(pillar).damageDealt = 12;
+                    Nightmare_Spark.AddDamageEnemy(pillar.Find("Pillar")).damageDealt = 12;
+                    Nightmare_Spark.AddDamageEnemy(pillar.Find("Pt Afterburn")).damageDealt = 12;
                     pillar.layer = (int)PhysLayers.HERO_ATTACK;
                     pillar.Find("Pillar").layer = (int)PhysLayers.HERO_ATTACK;
                     pillar.Find("Pt Afterburn").layer = (int)PhysLayers.HERO_ATTACK;
@@ -298,7 +302,7 @@
 
 
 
-            yield return new WaitForSeconds(.2f);
+            yield return new WaitForSeconds(.1f);
             fireball3.transform.position = firePoint.transform.position;
             fireball4.transform.position = firePoint.transform.position;
 
@@ -311,8 +315,8 @@
             storeAngle3 = num9 - 15f;
             float valuex3;
             float valuey3;
-            valuex3 = 30 * Mathf.Cos(storeAngle3 * 0.017453292f);
-            valuey3 = 30 * Mathf.Sin(storeAngle3 * 0.017453292f);
+            valuex3 = 26 * Mathf.Cos(storeAngle3 * 0.017453292f);
+            valuey3 = 26 * Mathf.Sin(storeAngle3 * 0.017453292f);
             Vector2 velocity3;
             velocity3.x = valuex3;
             velocity3.y = valuey3;
@@ -326,8 +330,8 @@
             storeAngle4 = num12 + 15f;
             float valuex4;
             float valuey4;
-            valuex4 = 30 * Mathf.Cos(storeAngle4 * 0.017453292f);
-            valuey4 = 30 * Mathf.Sin(storeAngle4 * 0.017453292f);
+            valuex4 = 26 * Mathf.Cos(storeAngle4 * 0.017453292f);
+            valuey4 = 26 * Mathf.Sin(storeAngle4 * 0.017453292f);
             Vector2 velocity4;
             velocity4.x = valuex4;
             velocity4.y = valuey4;
