@@ -39,7 +39,8 @@ namespace Nightmare_Spark
                 ("GG_Grimm_Nightmare", "Grimm Control/Nightmare Grimm Boss"),
                 ("GG_Grimm_Nightmare", "Grimm Control/Grimm Bats/Real Bat"),
                 ("GG_Grimm_Nightmare", "Grimm Spike Holder/Nightmare Spike"),
-                ("GG_Grimm", "Grimm Spike Holder/Grimm Spike")
+                ("GG_Grimm", "Grimm Spike Holder/Grimm Spike"),
+                ("Abyss_02", "Flamebearer Spawn")
             };
         }
         public static TextureStrings Ts { get; private set; }
@@ -49,10 +50,11 @@ namespace Nightmare_Spark
         public static GameObject? nkg;
         public static GameObject? burst;
         public static GameObject? realBat;
-        public static GameObject nightmareSpike;
-        public static GameObject grimmSpike;
-        public static AudioSource audioSource;
-        public static tk2dSpriteAnimation spikeAnimation;
+        public static GameObject? grimmkinSpawner;
+        public static GameObject? nightmareSpike;
+        public static GameObject? grimmSpike;
+        public static AudioSource? audioSource;
+        public static tk2dSpriteAnimation? spikeAnimation;
         public bool Placed = false;
         public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
@@ -61,6 +63,7 @@ namespace Nightmare_Spark
             realBat = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Control/Grimm Bats/Real Bat"];
             nightmareSpike = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Spike Holder/Nightmare Spike"];
             grimmSpike = preloadedObjects["GG_Grimm"]["Grimm Spike Holder/Grimm Spike"];
+            grimmkinSpawner = preloadedObjects["Abyss_02"]["Flamebearer Spawn"];
             GameObject.DontDestroyOnLoad(nkg);
             GameObject.DontDestroyOnLoad(realBat);
             Instance ??= this;
@@ -261,11 +264,24 @@ namespace Nightmare_Spark
 
         #endregion
 
-        private int gcdamage;
+
 
         private void FSMAwake(On.PlayMakerFSM.orig_Awake orig, PlayMakerFSM self)
         {
             orig(self);
+            if (HeroController.instance != null)
+            {
+                var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
+                PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
+                if (grimmchild != null)
+                {
+                    grimmchild.InsertCustomAction("Antic", () => Grimmchild.GrimmchildMain(), 7);
+                   
+                }
+            }
+            
+           
+
             if (self.FsmName == "Spell Control")
             {
                 FsmState castShadeSoul = self.GetState("Fireball 2");
@@ -320,28 +336,33 @@ namespace Nightmare_Spark
                 castVengefulSpirit.GetAction<CustomFsmAction>(4).Enabled = false;
             }
 
-            //--------Grimmchild/Carefree--------//
+            //--------Grimmchild--------//
 
             int gcLevel = PlayerData.instance.GetInt("grimmChildLevel");
-            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_40") && gcLevel <= 4)
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_40") && gcLevel <= 4 && gcLevel > 1)
             {
-
-
-                gcdamage = gcLevel switch
+                var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
+                PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
+                
+                if (grimmchild != null)
                 {
-                    2 => (int)(5 * 1.5f),
-                    3 => (int)(8 * 1.5f),
-                    4 => (int)(11 * 1.5f)
+                    gc.FsmVariables.FindFsmGameObject("Child").Value.Find("Enemy Range").transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+                    grimmchild.GetState("Antic").GetAction<CustomFsmAction>(7).Enabled = true;
+                }
 
-
-                };
-
-
+            }
+            else
+            {
                 var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
                 PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
                 if (grimmchild != null)
-                { grimmchild.GetState("Shoot").GetAction<SetFsmInt>(6).setValue = gcdamage; }
+                {
+                    grimmchild.GetState("Antic").GetAction<CustomFsmAction>(7).Enabled = false;
+                }
             }
+
+
+            //--------Carefree/Thorns--------//
             if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && gcLevel == 5 && PlayerData.instance.GetBool("equippedCharm_40"))
             {
                 if (PlayerData.instance.GetBool("equippedCharm_12"))

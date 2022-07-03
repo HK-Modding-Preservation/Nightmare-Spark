@@ -7,10 +7,9 @@ using Modding;
 using UnityEngine;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using Satchel;
+
 using GlobalEnums;
-using SFCore;
-using SFCore.Generics;
+
 
 namespace Nightmare_Spark
 {
