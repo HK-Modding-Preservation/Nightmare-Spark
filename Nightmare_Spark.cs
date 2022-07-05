@@ -138,7 +138,6 @@ namespace Nightmare_Spark
             Log("Initialized");
         }
 
-
         #region Charm Setup
         private void InitCallbacks()
         {
@@ -269,19 +268,15 @@ namespace Nightmare_Spark
         private void FSMAwake(On.PlayMakerFSM.orig_Awake orig, PlayMakerFSM self)
         {
             orig(self);
-            if (HeroController.instance != null)
+            if (self.FsmName == "Control")
             {
-                var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-                PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
-                if (grimmchild != null)
+                if (self.gameObject.name == "Grimmchild(Clone)")
                 {
+                    FsmState grimmchild = self.GetState("Antic");
                     grimmchild.InsertCustomAction("Antic", () => Grimmchild.GrimmchildMain(), 7);
-                   
                 }
+                
             }
-            
-           
-
             if (self.FsmName == "Spell Control")
             {
                 FsmState castShadeSoul = self.GetState("Fireball 2");

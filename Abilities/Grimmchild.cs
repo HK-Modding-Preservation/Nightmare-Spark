@@ -201,7 +201,7 @@
         private static IEnumerator FireBurstThree()
         {
             var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-            PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
+            PlayMakerFSM grimmchild =    gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
             GameObject firePoint = grimmchild.FsmVariables.FindFsmGameObject("Flame Point").Value;
             var fireball = grimmchild.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).gameObject.Value;
             yield return new WaitForSeconds(.25f);
@@ -217,16 +217,16 @@
 
 
             float storeAngle1;
-            float num = targetpos.y + 0 - fireball1.transform.position.y;
-            float num2 = targetpos.x + 0 - fireball1.transform.position.x;
+            float num = targetpos.y + 0 /*Grimmchild y*/ - fireball1.transform.position.y;
+            float num2 = targetpos.x + 0 /*Grimmchild x*/ - fireball1.transform.position.x;
             float num3 = Mathf.Atan2(num, num2) * 57.295776f;
             
             
-            storeAngle1 = num3 - 30f;
+            storeAngle1 = num3 - 30f/*Angle*/;
             float valuex;
             float valuey;
-            valuex = 30 * Mathf.Cos(storeAngle1 * 0.017453292f);
-            valuey = 30 * Mathf.Sin(storeAngle1 * 0.017453292f);
+            valuex = 30 /*Projectile speed*/ * Mathf.Cos(storeAngle1 * 0.017453292f);
+            valuey = 30 /*Projectile speed*/ * Mathf.Sin(storeAngle1 * 0.017453292f);
             Vector2 velocity;
             velocity.x = valuex;
             velocity.y = valuey;
