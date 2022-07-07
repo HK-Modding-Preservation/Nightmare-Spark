@@ -13,16 +13,9 @@ namespace Nightmare_Spark
                 GameObject.Destroy(firebat.LocateMyFSM("Control"));
                 firebat.layer = (int)PhysLayers.HERO_ATTACK;
                 var col = firebat.GetComponent<Collider2D>();
-                col.enabled = true;
-                col.isTrigger = true;
-                if (PlayerData.instance.GetBool("equippedCharm_19"))
-                {
-                    Nightmare_Spark.AddDamageEnemy(firebat).damageDealt = (int)((spellLevel * 3) * 1.5f);
-                }
-                else
-                {
-                    Nightmare_Spark.AddDamageEnemy(firebat).damageDealt = (int)(spellLevel * 3f);
-                }
+                col.enabled = true;       
+                Nightmare_Spark.AddDamageEnemy(firebat).damageDealt = (int)(spellLevel * 3.5f);
+                
                 foreach (var DH in firebat.GetComponentsInChildren<DamageHero>())
                 {
                     GameObject.Destroy(DH);
@@ -141,7 +134,7 @@ namespace Nightmare_Spark
                     return;
                 }
                 Nightmare_Spark.audioSource.pitch = .75f;
-                Nightmare_Spark.audioSource.volume = 1.75f;
+                Nightmare_Spark.audioSource.volume = .05f;
                 var audioClip = firebat.GetAction<AudioPlayerOneShotSingle>(8).audioClip.Value as AudioClip;
                 Nightmare_Spark.audioSource.PlayOneShot(audioClip);
 
@@ -203,7 +196,7 @@ namespace Nightmare_Spark
                     return;
                 }
                 Nightmare_Spark.audioSource.pitch = .75f;
-                Nightmare_Spark.audioSource.volume = .3f;
+                Nightmare_Spark.audioSource.volume = .05f;
                 var audioClip = firebat.GetAction<AudioPlayerOneShotSingle>(8).audioClip.Value as AudioClip;
                 Nightmare_Spark.audioSource.PlayOneShot(audioClip);
                 gameObject.transform.Find("Hero Hurter").gameObject.active = false;

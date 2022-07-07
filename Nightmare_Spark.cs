@@ -26,7 +26,7 @@ namespace Nightmare_Spark
         public static Nightmare_Spark Instance;
 
         new public string GetName() => "NightmareSpark";
-        public override string GetVersion() => "V0.9";
+        public override string GetVersion() => "V1.0";
         public Nightmare_Spark() : base("Nightmare Spark")
         {
             Ts = new TextureStrings();
@@ -70,7 +70,7 @@ namespace Nightmare_Spark
             var go = new GameObject("AudioSource");
             audioSource = go.AddComponent<AudioSource>();
             audioSource.pitch = .75f;
-            audioSource.volume = .3f;
+            audioSource.volume = .01f;
             UnityEngine.Object.DontDestroyOnLoad(audioSource);
 
             CharmIDs = CharmHelper.AddSprites(Ts.Get(TextureStrings.NightmareSparkKey));
@@ -280,9 +280,9 @@ namespace Nightmare_Spark
             if (self.FsmName == "Spell Control")
             {
                 FsmState castShadeSoul = self.GetState("Fireball 2");
-                castShadeSoul.InsertCustomAction("Fireball 2", () => Firebat.SpawnBat(15), 4);
+                castShadeSoul.InsertCustomAction("Fireball 2", () => Firebat.SpawnBat(20), 4);
                 FsmState castVengefulSpirit = self.GetState("Fireball 1");
-                castVengefulSpirit.InsertCustomAction("Fireball 1", () => Firebat.SpawnBat(10), 4);
+                castVengefulSpirit.InsertCustomAction("Fireball 1", () => Firebat.SpawnBat(15), 4);
                 FsmState castQuakeDive = self.GetState("Q1 Effect");
                 castQuakeDive.InsertCustomAction("Q1 Effect", () => DiveFireball.DiveFireballs(15, 24), 4);
                 FsmState castQuakeDark = self.GetState("Q2 Effect");
@@ -299,7 +299,7 @@ namespace Nightmare_Spark
             if (HeroController.instance == null || HeroController.instance.spellControl == null) { return orig; }
             FsmState castQuakeDive = HeroController.instance.spellControl.GetState("Q1 Effect");
             FsmState castQuakeDark = HeroController.instance.spellControl.GetState("Q2 Effect");
-            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_37"))
             {
                 castQuakeDive.GetAction<CustomFsmAction>(4).Enabled = true;
                 castQuakeDark.GetAction<CustomFsmAction>(4).Enabled = true;
