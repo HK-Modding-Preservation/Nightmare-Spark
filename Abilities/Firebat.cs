@@ -83,7 +83,8 @@ namespace Nightmare_Spark
             {
                 burst = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
                 GameObject.DontDestroyOnLoad(burst);
-                UnityEngine.Object.DestroyImmediate(burst.LocateMyFSM("damages_hero"));
+                GameObject.Destroy(burst.LocateMyFSM("damages_hero"));
+
                 Nightmare_Spark.AddDamageEnemy(burst).damageDealt = 10;
                 burst.gameObject.GetComponent<ParticleSystem>().startSize = 200;
 

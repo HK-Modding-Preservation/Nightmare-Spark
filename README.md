@@ -9,7 +9,7 @@ Charm can also be acquired with Debug Mods "Give All Charms" button/keybind, by 
 Flukenest: Replaces the fluke spell with a burst of 3 firebats that deal considerable damage. Damage is buffed by Shamans Stone.
 Flukenest + Defenders Crest: Fires a single massive, slow-moving firebat that causes a huge explosion on impact.  Damage is not effected by shamans stone
 Dash Master: Decreases the cooldown time for the flame trail.
-Sprint Master*: Adds a rain of fireballs at the start of the dive spell. Fireball count and damage scale with spell level, 5 fireballs at level 1 and 7 at level 2 
+Spell Twister: Adds a rain of fireballs at the start of the dive spell. Fireball count and damage scale with spell level, 5 fireballs at level 1 and 7 at level 2 
 Shape of Unn: The Knight becomes a bat and can fly around untill the focus finishes. Speed of the bat and range scales with deep focus & quick focus 
 Carefree Melody: Activating Carefree's shield will spawn a ring of grimm spikes that eject outward from the spot the shield procced dealing damage
 Carefree Melody + Thorns of Agony: Activating Carefree's shield wills spawn a ring of nightmare spikes that eject outwards from the spot the shield procced dealing extra damage
@@ -18,7 +18,6 @@ Grimmchild: Increase Grimmchild enemy detection range by 50%. Every 3rd shot Gri
 2. At medium range Grimmchild will fire 4 extra fireballs for a total of 5 in a volley of 3 then 2.
 3. At long range Grimmchild will eject a spiral of fireballs 
 
-* Currently unsure which charm to tie this ability to, consider it a placeholder of sorts
 
 !KNOWN ISSUES!
 - The audio effect for launching fire bats is NOT effected by the in-game volume sliders, it's volume has been drastically lowered to account for this.

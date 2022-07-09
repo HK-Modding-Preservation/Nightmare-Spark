@@ -284,9 +284,9 @@ namespace Nightmare_Spark
                 FsmState castVengefulSpirit = self.GetState("Fireball 1");
                 castVengefulSpirit.InsertCustomAction("Fireball 1", () => Firebat.SpawnBat(15), 4);
                 FsmState castQuakeDive = self.GetState("Q1 Effect");
-                castQuakeDive.InsertCustomAction("Q1 Effect", () => DiveFireball.DiveFireballs(15, 24), 4);
+                castQuakeDive.InsertCustomAction("Q1 Effect", () => DiveFireball.DiveFireballs(13, 24), 4);
                 FsmState castQuakeDark = self.GetState("Q2 Effect");
-                castQuakeDark.InsertCustomAction("Q2 Effect", () => DiveFireball.DiveFireballs(20, 36), 4);
+                castQuakeDark.InsertCustomAction("Q2 Effect", () => DiveFireball.DiveFireballs(18, 36), 4);
                 FsmState castSlug = self.GetState("Focus S");
                 castSlug.InsertCustomAction("Focus S", () => ShapeOfGrimm.GrimmSlug(), 15);
             }
@@ -299,7 +299,7 @@ namespace Nightmare_Spark
             if (HeroController.instance == null || HeroController.instance.spellControl == null) { return orig; }
             FsmState castQuakeDive = HeroController.instance.spellControl.GetState("Q1 Effect");
             FsmState castQuakeDark = HeroController.instance.spellControl.GetState("Q2 Effect");
-            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_37"))
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_33"))
             {
                 castQuakeDive.GetAction<CustomFsmAction>(4).Enabled = true;
                 castQuakeDark.GetAction<CustomFsmAction>(4).Enabled = true;
