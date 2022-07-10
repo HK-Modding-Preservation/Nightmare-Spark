@@ -4,31 +4,29 @@
     {
         public static int shots = 0;
         public static bool Active = false;
-        public static void GrimmchildMain()
+        public static void GrimmchildMain(GameObject grimmchild)
         {     
             if (!Active)
             {
-                var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-                PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
-                GameObject grimmchildobj = gc.FsmVariables.FindFsmGameObject("Child").Value;
+                grimmchild.Find("Enemy Range").transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
                 Active = true;          
                 shots++;
                 if (shots == 1)
                 {
                     var choice = 1;
 
-                    var targetpos = grimmchild.GetState("Antic").GetAction<FaceObject>(1).objectB.Value.transform.position;
-                    if ((targetpos - grimmchildobj.transform.position).sqrMagnitude >= 9*9)
+                    var targetpos = grimmchild.LocateMyFSM("Control").GetState("Antic").GetAction<FaceObject>(1).objectB.Value.transform.position;
+                    if ((targetpos - grimmchild.transform.position).sqrMagnitude >= 9*9)
                     {
                         //Far = Swirl
                         choice = 3;
                     }
-                    if ((targetpos - grimmchildobj.transform.position).sqrMagnitude < 9*9 && (targetpos - grimmchildobj.transform.position).sqrMagnitude > 5*5)
+                    if ((targetpos - grimmchild.transform.position).sqrMagnitude < 9*9 && (targetpos - grimmchild.transform.position).sqrMagnitude > 5*5)
                     {
                         //Mid = Burst
                         choice = 1;
                     }
-                    if ((targetpos - grimmchildobj.transform.position).sqrMagnitude <= 5*5)
+                    if ((targetpos - grimmchild.transform.position).sqrMagnitude <= 5*5)
                     {
                         //Near = Pillar
                         choice = 2;
@@ -37,13 +35,13 @@
                     switch (choice)
                     {
                         case 1:
-                            GrimmchildBurst();
+                            GrimmchildBurst(grimmchild);
                             break;
                         case 2:
-                            GrimmchildPillar();
+                            GrimmchildPillar(grimmchild);
                             break;
                         case 3:
-                            GrimmchildSwirl();
+                            GrimmchildSwirl(grimmchild);
                             break;
                     }
 
@@ -51,16 +49,16 @@
                 if (shots == 2)
                 {
                     
-                    grimmchild.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 15;
-                    var fireball = grimmchild.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).storeObject.Value;
+                    grimmchild.LocateMyFSM("Control").GetState("Shoot").GetAction<FireAtTarget>(7).spread = 15;
+                    var fireball = grimmchild.LocateMyFSM("Control").GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).storeObject.Value;
                     fireball.RemoveComponent<PillarBehaviour>();
                     fireball.Find("Enemy Damager").RemoveComponent<PillarChildBehaviour>();
                     GameManager.instance.StartCoroutine(WaitLikeHalfASecond());
                 }
                 if (shots == 3)
                 {
-                    grimmchild.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 15;
-                    var fireball = grimmchild.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).storeObject.Value;
+                    grimmchild.LocateMyFSM("Control").GetState("Shoot").GetAction<FireAtTarget>(7).spread = 15;
+                    var fireball = grimmchild.LocateMyFSM("Control").GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).storeObject.Value;
                     fireball.RemoveComponent<PillarBehaviour>();
                     fireball.Find("Enemy Damager").RemoveComponent<PillarChildBehaviour>();
                     shots = 0;
@@ -75,41 +73,41 @@
             Active = false;
         }
 
-        private static void GrimmchildBurst()
+        private static void GrimmchildBurst(GameObject grimmchild)
         {
             int gcLevel = PlayerData.instance.GetInt("grimmChildLevel");
             Modding.Logger.Log("Picked Burst");
             if (gcLevel == 4)
             {
-                GameManager.instance.StartCoroutine(FireBurstFive());
+                GameManager.instance.StartCoroutine(FireBurstFive(grimmchild));
             }
             else
             {
-                GameManager.instance.StartCoroutine(FireBurstThree());
+                GameManager.instance.StartCoroutine(FireBurstThree(grimmchild));
                 
             }
             GameManager.instance.StartCoroutine(WaitLikeHalfASecond());
         }
-        private static void GrimmchildPillar()
+        private static void GrimmchildPillar(GameObject grimmchild)
         {
             Modding.Logger.Log("Picked Pillar");
             
-            GameManager.instance.StartCoroutine(PillarCoroutine());    
+            GameManager.instance.StartCoroutine(PillarCoroutine(grimmchild));    
             GameManager.instance.StartCoroutine(WaitLikeHalfASecond());
         }
-        private static void GrimmchildSwirl()
+        private static void GrimmchildSwirl(GameObject grimmchild)
         {
             Modding.Logger.Log("Picked Swirl");
-            GameManager.instance.StartCoroutine(SwirlCoroutine());
+            GameManager.instance.StartCoroutine(SwirlCoroutine(grimmchild));
             GameManager.instance.StartCoroutine(WaitLikeHalfASecond());
         }
 
         //-----Swirl Shot-----//
-        private static IEnumerator SwirlCoroutine()
+        private static IEnumerator SwirlCoroutine(GameObject grimmchild)
         {
             var grimmkinLarge = Nightmare_Spark.grimmkinSpawner.LocateMyFSM("Spawn Control").GetState("Level 3").GetAction<CreateObject>(0).gameObject.Value;
-            var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-            GameObject grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value;
+            var gc = grimmchild.LocateMyFSM("Control");
+            
 
             yield return new WaitForSeconds(.25f);
             for (float i = 0; i <= 360; i += 90)
@@ -186,24 +184,24 @@
             }
         }
 
-        private static IEnumerator PillarCoroutine()
+        private static IEnumerator PillarCoroutine(GameObject grimmchild)
         {
-            var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-            PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
-            yield return new WaitUntil(() => grimmchild.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).storeObject.Value != null);
-            var fireball = grimmchild.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).storeObject.Value;
+            var gc = grimmchild.LocateMyFSM("Control");
+            
+            yield return new WaitUntil(() => gc.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).storeObject.Value != null);
+            var fireball = gc.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).storeObject.Value;
             fireball.AddComponent<PillarBehaviour>();
             fireball.Find("Enemy Damager").AddComponent<PillarChildBehaviour>();
         }
 
 
         //-----Burst Shot-----//
-        private static IEnumerator FireBurstThree()
+        private static IEnumerator FireBurstThree(GameObject grimmchild)
         {
-            var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-            PlayMakerFSM grimmchild =    gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
-            GameObject firePoint = grimmchild.FsmVariables.FindFsmGameObject("Flame Point").Value;
-            var fireball = grimmchild.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).gameObject.Value;
+            
+            var gc = grimmchild.LocateMyFSM("Control");
+            GameObject firePoint = gc.FsmVariables.FindFsmGameObject("Flame Point").Value;
+            var fireball = gc.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).gameObject.Value;
             yield return new WaitForSeconds(.25f);
 
             var fireball1 = GameObject.Instantiate(fireball);
@@ -212,8 +210,8 @@
             fireball2.transform.position = firePoint.transform.position;
 
 
-            grimmchild.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 0;
-            var targetpos = grimmchild.GetState("Shoot").GetAction<FaceObject>(1).objectB.Value.transform.position;
+            gc.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 0;
+            var targetpos = gc.GetState("Shoot").GetAction<FaceObject>(1).objectB.Value.transform.position;
 
 
             float storeAngle1;
@@ -248,13 +246,11 @@
             fireball2.GetComponent<Rigidbody2D>().velocity = velocity2;
             
         }
-        private static IEnumerator FireBurstFive()
+        private static IEnumerator FireBurstFive(GameObject grimmchild)
         {
-            var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-            PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
-            GameObject grimmchildobj = gc.FsmVariables.FindFsmGameObject("Child").Value; ;
-            GameObject firePoint = grimmchild.FsmVariables.FindFsmGameObject("Flame Point").Value;
-            var fireball = grimmchild.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).gameObject.Value;
+            var gc = grimmchild.LocateMyFSM("Control");
+            GameObject firePoint = gc.FsmVariables.FindFsmGameObject("Flame Point").Value;
+            var fireball = gc.GetState("Shoot").GetAction<SpawnObjectFromGlobalPool>(4).gameObject.Value;
             yield return new WaitForSeconds(.25f);
 
             var fireball1 = GameObject.Instantiate(fireball);
@@ -265,8 +261,8 @@
             fireball2.transform.position = firePoint.transform.position;
             
 
-            grimmchild.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 0;
-            var targetpos = grimmchild.GetState("Shoot").GetAction<FaceObject>(1).objectB.Value.transform.position;
+            gc.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 0;
+            var targetpos = gc.GetState("Shoot").GetAction<FaceObject>(1).objectB.Value.transform.position;
 
 
             float storeAngle1;
@@ -298,7 +294,7 @@
             velocity2.x = valuex2;
             velocity2.y = valuey2;
             fireball2.GetComponent<Rigidbody2D>().velocity = velocity2;
-            grimmchild.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 15;
+            gc.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 15;
 
 
 
@@ -336,7 +332,7 @@
             velocity4.x = valuex4;
             velocity4.y = valuey4;
             fireball4.GetComponent<Rigidbody2D>().velocity = velocity4;
-            grimmchild.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 15;
+            gc.GetState("Shoot").GetAction<FireAtTarget>(7).spread = 15;
         }
     }
 }

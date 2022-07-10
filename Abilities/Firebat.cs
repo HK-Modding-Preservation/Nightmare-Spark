@@ -175,7 +175,7 @@ namespace Nightmare_Spark
 
             void OnDestroy()
             {
-                var impact = nkg.LocateMyFSM("Control").GetState("Impact");
+                var impact = nkg.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value.LocateMyFSM("Control").GetState("Impact");
                 var audioClip = impact.GetAction<AudioPlaySimple>(1).oneShotClip.Value as AudioClip;
                 Nightmare_Spark.audioSource.PlayOneShot(audioClip);
             }
@@ -209,8 +209,8 @@ namespace Nightmare_Spark
                 gameObject.transform.localScale = new Vector3(oldscale.x * (facing ? 2f : -2f), 2f, oldscale.z);
             }
             void OnDestroy()
-            {
-                var impact = nkg.LocateMyFSM("Control").GetState("Impact");
+            { 
+                var impact = nkg.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value.LocateMyFSM("Control").GetState("Impact");
                 var audioClip = impact.GetAction<AudioPlaySimple>(1).oneShotClip.Value as AudioClip;
                 Nightmare_Spark.audioSource.PlayOneShot(audioClip);
                 gameObject.transform.Find("Impact").gameObject.active = true;

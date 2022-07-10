@@ -101,19 +101,20 @@ namespace Nightmare_Spark
             On.HealthManager.TakeDamage += Firebat.BatDie;
             ModHooks.HeroUpdateHook += ShapeOfGrimm.GrimmSlugMovement;
             ModHooks.FinishedLoadingModsHook += DebugGiveCharm;
+            On.DamageEnemies.FixedUpdate += ErrorBegone;
             On.UIManager.StartNewGame += (On.UIManager.orig_StartNewGame orig, UIManager self, bool permaDeath, bool bossRush) =>
             {
                 ItemChangerMod.CreateSettingsProfile(overwrite: false, createDefaultModules: false);
                 orig(self, permaDeath, bossRush);
             };
             ModHooks.SetPlayerBoolHook += (string target, bool orig) =>
-            {
+            { 
                 var pd = PlayerData.instance;
                 if (pd.GetBool("bossRushMode"))
                 {
                     SaveSettings.gotCharms[0] = true;
                 }
-                if (!Placed && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && !pd.GetBool("troupeInTown") && pd.GetBool("destroyedNightmareLantern") || !Placed && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && !pd.GetBool("troupeInTown") && pd.GetBool("killedNightmareGrimm"))
+                if (!Placed && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && pd.GetBool("destroyedNightmareLantern") || !Placed && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && pd.GetBool("killedNightmareGrimm"))
                 {
                     float xpos = 47.2f;
                     float ypos = 4.4f;
@@ -136,6 +137,15 @@ namespace Nightmare_Spark
                 return orig;
             };
             Log("Initialized");
+        }
+
+        private void ErrorBegone(On.DamageEnemies.orig_FixedUpdate orig, DamageEnemies self)
+        {
+            try
+            {
+                orig(self);
+            }
+            catch { }        
         }
 
         #region Charm Setup
@@ -270,10 +280,10 @@ namespace Nightmare_Spark
             orig(self);
             if (self.FsmName == "Control")
             {
-                if (self.gameObject.name == "Grimmchild(Clone)")
+                if (self.gameObject.tag == "Grimmchild")
                 {
                     FsmState grimmchild = self.GetState("Antic");
-                    grimmchild.InsertCustomAction("Antic", () => Grimmchild.GrimmchildMain(), 7);
+                    grimmchild.InsertCustomAction("Antic", () => Grimmchild.GrimmchildMain(self.gameObject), 7);
                 }
                 
             }
@@ -341,7 +351,7 @@ namespace Nightmare_Spark
                 
                 if (grimmchild != null)
                 {
-                    gc.FsmVariables.FindFsmGameObject("Child").Value.Find("Enemy Range").transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+                    
                     grimmchild.GetState("Antic").GetAction<CustomFsmAction>(7).Enabled = true;
                 }
 
@@ -352,6 +362,7 @@ namespace Nightmare_Spark
                 PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
                 if (grimmchild != null)
                 {
+                    gc.FsmVariables.FindFsmGameObject("Child").Value.Find("Enemy Range").transform.localScale = new Vector3(1f, 1f, 1f);
                     grimmchild.GetState("Antic").GetAction<CustomFsmAction>(7).Enabled = false;
                 }
             }
