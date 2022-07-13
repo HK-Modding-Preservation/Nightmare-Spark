@@ -7,7 +7,7 @@
         private static readonly int numberOfSpawns = 8;
         private static readonly float Rate = 15f;
         private static  bool cooldown = false;
-        private static GameObject trail = Nightmare_Spark.myTrail;
+        private static GameObject trail;
         public static bool StartTrail()
         {
             if (Satchel.Reflected.HeroControllerR.CanDash() == true && (PlayerData.instance.GetBool($"equippedCharm_{Nightmare_Spark.Instance.CharmIDs[0]}")))

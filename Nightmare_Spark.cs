@@ -46,7 +46,6 @@ namespace Nightmare_Spark
         public static TextureStrings Ts { get; private set; }
         public List<int> CharmIDs { get; private set; }
 
-        public static GameObject? myTrail;
         public static GameObject? nkg;
         public static GameObject? burst;
         public static GameObject? realBat;

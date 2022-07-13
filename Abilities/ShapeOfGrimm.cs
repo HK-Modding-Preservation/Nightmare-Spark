@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 
 namespace Nightmare_Spark
 {
+
     internal class ShapeOfGrimm
     {
         private static GameObject Bat;
         public static int GrimmSlugVelocity;
         public static int GrimmSlugIndicatorRange;
-        private static Vector2 tether;
+        private static Vector3 tether;
+        private static GameObject[] link = new GameObject[6];
         //private static float tetherx;
         //private static float tethery;
         public static bool gsActive = false;
@@ -66,7 +68,19 @@ namespace Nightmare_Spark
                 sc.GetState("Focus Right").GetAction<SetParticleEmissionRate>(9).emissionRate.Value = 0f;
                 sc.GetState("Focus Right").GetAction<SetParticleEmissionRate>(10).emissionRate.Value = 0f;
                 HeroController.instance.GetComponent<Rigidbody2D>().velocity = new Vector2(gshorizontal, gsvertical);
+                
+                float distance = HeroController.instance.transform.position.sqrMagnitude - tether.sqrMagnitude;
+                float xdistance = HeroController.instance.transform.position.x - tether.x;
+                float ydistance = (HeroController.instance.transform.position.y -1) - tether.y;
+                for (int i = 0; i < 5; i++)
+                {
+                    if (link[i] != null)
+                    {
+                        link[i].transform.position = tether - new Vector3(-(xdistance / 5) * i, -(ydistance / 5 * i), 0);
+                    }
 
+
+                }
             }
 
             if (Bat != null)
@@ -85,14 +99,19 @@ namespace Nightmare_Spark
                 HeroController.instance.AffectedByGravity(true);
 
                 HeroController.instance.transform.Find("Focus Effects").Find("Lines Anim").GetComponent<tk2dSprite>().color = new Color(1f, 1, 1, 1);
-
+             
 
                 Bat.SetActive(false);
                 Bat.GetComponent<tk2dSpriteAnimator>().Play("Bat End");
 
+                foreach (GameObject obj in link)
+                {
+                    GameObject.Destroy(obj);
+                }
+
                 HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = true;
             }
-
+            
         }
         public static void GrimmSlug()
         {
@@ -104,11 +123,12 @@ namespace Nightmare_Spark
             sc.RemoveTransition("Focus Right", "LEFT GROUND");
 
             Bat = GameObject.Instantiate(Nightmare_Spark.realBat);
+            Bat.layer = (int)PhysLayers.PLAYER;
             Bat.SetActive(true);
             GameObject.Destroy(Bat.LocateMyFSM("Control"));
             Bat.RemoveComponent<HealthManager>();
             Bat.GetComponent<MeshRenderer>().enabled = true;
-           
+
 
 
 
@@ -149,6 +169,18 @@ namespace Nightmare_Spark
                 }
             }
 
+            for (int i = 0; i < 5; i++)
+            {
+                link[i] = GameObject.Instantiate(Nightmare_Spark.nkg.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
+                link[i].transform.localScale = new Vector3(.1f, .1f, 0);
+                link[i].GetComponent<ParticleSystem>().startSize = .01f;
+                link[i].GetComponent<ParticleSystemRenderer>().maxParticleSize = .01f;
+                link[i].GetComponent<ParticleSystem>().loop = true;
+                link[i].LocateMyFSM("Control").RemoveTransition("State 2", "FINISHED");
+                UnityEngine.Object.Destroy(link[i].LocateMyFSM("damages_hero"));
+                link[i].AddComponent<NonBouncer>();
+            }
+
             gsActive = true;
 
             tether = HeroController.instance.transform.position;
@@ -157,6 +189,7 @@ namespace Nightmare_Spark
             circle.AddComponent<Circle>();
             circle.transform.position = HeroController.instance.transform.position - new Vector3(0, 1.1f, 0);
             GameManager.instance.StartCoroutine(Timer(circle));
+
 
         }
         private static IEnumerator Timer(GameObject circle)
@@ -225,7 +258,7 @@ namespace Nightmare_Spark
                 var HCpos = HeroController.instance.transform.position;
 
                 var diff = new Vector2(HCpos.x - tether.x, HCpos.y - tether.y);
-                if (diff.magnitude > GrimmSlugIndicatorRange)
+                if (diff.sqrMagnitude > GrimmSlugIndicatorRange*GrimmSlugIndicatorRange)
                 {
                     HeroController.instance.transform.position = previousheropos;
                 }
