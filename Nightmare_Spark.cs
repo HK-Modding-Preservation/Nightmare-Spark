@@ -26,7 +26,7 @@ namespace Nightmare_Spark
         public static Nightmare_Spark Instance;
 
         new public string GetName() => "NightmareSpark";
-        public override string GetVersion() => "V1.0";
+        public override string GetVersion() => "V1.1";
         public Nightmare_Spark() : base("Nightmare Spark")
         {
             Ts = new TextureStrings();
@@ -40,7 +40,8 @@ namespace Nightmare_Spark
                 ("GG_Grimm_Nightmare", "Grimm Control/Grimm Bats/Real Bat"),
                 ("GG_Grimm_Nightmare", "Grimm Spike Holder/Nightmare Spike"),
                 ("GG_Grimm", "Grimm Spike Holder/Grimm Spike"),
-                ("Abyss_02", "Flamebearer Spawn")
+                ("Abyss_02", "Flamebearer Spawn"),
+                ("Fungus1_10", "Flamebearer Spawn")
             };
         }
         public static TextureStrings Ts { get; private set; }
@@ -50,6 +51,7 @@ namespace Nightmare_Spark
         public static GameObject? burst;
         public static GameObject? realBat;
         public static GameObject? grimmkinSpawner;
+        public static GameObject? grimmkinSpawnerSmall;
         public static GameObject? nightmareSpike;
         public static GameObject? grimmSpike;
         public static AudioSource? audioSource;
@@ -63,6 +65,7 @@ namespace Nightmare_Spark
             nightmareSpike = preloadedObjects["GG_Grimm_Nightmare"]["Grimm Spike Holder/Nightmare Spike"];
             grimmSpike = preloadedObjects["GG_Grimm"]["Grimm Spike Holder/Grimm Spike"];
             grimmkinSpawner = preloadedObjects["Abyss_02"]["Flamebearer Spawn"];
+            grimmkinSpawnerSmall = preloadedObjects["Fungus1_10"]["Flamebearer Spawn"];
             GameObject.DontDestroyOnLoad(nkg);
             GameObject.DontDestroyOnLoad(realBat);
             Instance ??= this;
@@ -94,6 +97,7 @@ namespace Nightmare_Spark
             Finder.DefineCustomItem(item);
 
             InitCallbacks();
+            On.HeroController.Awake += AddChild;
             On.PlayMakerFSM.Awake += FSMAwake;
             ModHooks.DashPressedHook += Firetrail.StartTrail;
             ModHooks.SetPlayerBoolHook += CheckCharms;
@@ -101,6 +105,8 @@ namespace Nightmare_Spark
             ModHooks.HeroUpdateHook += ShapeOfGrimm.GrimmSlugMovement;
             ModHooks.FinishedLoadingModsHook += DebugGiveCharm;
             On.DamageEnemies.FixedUpdate += ErrorBegone;
+            ModHooks.HeroUpdateHook += GrimmkinWarp.WarpMain;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += GrimmkinWarp.SceneChange;
             On.UIManager.StartNewGame += (On.UIManager.orig_StartNewGame orig, UIManager self, bool permaDeath, bool bossRush) =>
             {
                 ItemChangerMod.CreateSettingsProfile(overwrite: false, createDefaultModules: false);
@@ -136,6 +142,22 @@ namespace Nightmare_Spark
                 return orig;
             };
             Log("Initialized");
+        }
+
+        private void AddChild(On.HeroController.orig_Awake orig, HeroController self)
+        {
+            var indicatorTorch = GameObject.Instantiate(grimmkinSpawner.gameObject);
+            GameObject.Destroy(indicatorTorch.LocateMyFSM("Spawn Control"));
+            indicatorTorch.name = "Torch Indicator";
+            indicatorTorch.transform.parent = self.transform;
+            indicatorTorch.transform.position = self.transform.position + new Vector3(0.3f, -0.7f, 0);
+            indicatorTorch.transform.SetRotationZ(328.8504f);
+            indicatorTorch.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+            indicatorTorch.Find("Active Effects").Find("Pt Orbs").GetComponent<ParticleSystemRenderer>().maxParticleSize = .01f;
+            indicatorTorch.active = false;
+            indicatorTorch.Find("Active Effects").Find("Flame_smoke").active = false;
+            indicatorTorch.Find("Active Effects").Find("lava_particles_03").active = false;
+            orig(self);
         }
 
         private void ErrorBegone(On.DamageEnemies.orig_FixedUpdate orig, DamageEnemies self)
@@ -284,7 +306,7 @@ namespace Nightmare_Spark
                     FsmState grimmchild = self.GetState("Antic");
                     grimmchild.InsertCustomAction("Antic", () => Grimmchild.GrimmchildMain(self.gameObject), 7);
                 }
-                
+
             }
             if (self.FsmName == "Spell Control")
             {
@@ -300,12 +322,38 @@ namespace Nightmare_Spark
                 castSlug.InsertCustomAction("Focus S", () => ShapeOfGrimm.GrimmSlug(), 15);
             }
         }
+        public bool sdashtransition = false;
         private bool CheckCharms(string target, bool orig)
         {
-           
+            if (HeroController.instance == null || HeroController.instance.spellControl == null) { return orig; }
+            //--------Grimmkin Warp--------//
+
+            var sdash = HeroController.instance.superDash;
+            
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_37"))
+            {
+                if (!sdashtransition)
+                {
+                    sdashtransition = true;
+                    sdash.RemoveTransition("Inactive", "BUTTON DOWN");
+                }
+                
+            }
+            else
+            {
+                if (sdashtransition)
+                {
+                    sdashtransition = false;
+                    sdash.AddTransition("Inactive", "BUTTON DOWN", "Can Superdash?");
+                }
+                
+            }
+            
+            
+
             //--------Fireball Dive--------//
 
-            if (HeroController.instance == null || HeroController.instance.spellControl == null) { return orig; }
+           
             FsmState castQuakeDive = HeroController.instance.spellControl.GetState("Q1 Effect");
             FsmState castQuakeDark = HeroController.instance.spellControl.GetState("Q2 Effect");
             if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_33"))
@@ -382,11 +430,12 @@ namespace Nightmare_Spark
             }
 
             //--------Grimm Slug--------//
+ 
             var sc = HeroController.instance.spellControl;
             FsmState castSlug = HeroController.instance.spellControl.GetState("Focus S");
             if (PlayerData.instance.GetBool("equippedCharm_28") && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
             {
-                castSlug.GetAction<CustomFsmAction>(15).Enabled = true;           
+                castSlug.GetAction<CustomFsmAction>(15).Enabled = true;
             }
             else
             {

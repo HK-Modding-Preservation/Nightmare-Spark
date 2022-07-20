@@ -13,10 +13,14 @@ namespace Nightmare_Spark
         public static int GrimmSlugVelocity;
         public static int GrimmSlugIndicatorRange;
         private static Vector3 tether;
+        private static string batEndClip;
         private static GameObject[] link = new GameObject[6];
+
+
         //private static float tetherx;
         //private static float tethery;
         public static bool gsActive = false;
+
 
         public static void GrimmSlugMovement()
         {
@@ -71,12 +75,12 @@ namespace Nightmare_Spark
                 
                 float distance = HeroController.instance.transform.position.sqrMagnitude - tether.sqrMagnitude;
                 float xdistance = HeroController.instance.transform.position.x - tether.x;
-                float ydistance = (HeroController.instance.transform.position.y -1) - tether.y;
+                float ydistance = (HeroController.instance.transform.position.y -1) - tether.y + 1;
                 for (int i = 0; i < 5; i++)
                 {
                     if (link[i] != null)
                     {
-                        link[i].transform.position = tether - new Vector3(-(xdistance / 5) * i, -(ydistance / 5 * i), 0);
+                        link[i].transform.position = tether - new Vector3(-(xdistance / 5) * i, -(ydistance / 5 * i) +1, 0);
                     }
 
 
@@ -99,23 +103,30 @@ namespace Nightmare_Spark
                 HeroController.instance.AffectedByGravity(true);
 
                 HeroController.instance.transform.Find("Focus Effects").Find("Lines Anim").GetComponent<tk2dSprite>().color = new Color(1f, 1, 1, 1);
-             
+                
 
-                Bat.SetActive(false);
-                Bat.GetComponent<tk2dSpriteAnimator>().Play("Bat End");
-
-                foreach (GameObject obj in link)
+                Bat.GetComponent<tk2dSpriteAnimator>().Play(batEndClip);
+                Bat.GetComponent<tk2dSpriteAnimator>().AnimationCompleted += (caller, clip) =>
                 {
-                    GameObject.Destroy(obj);
-                }
+                    if (clip.name == batEndClip)
+                    {
+                        GameObject.Destroy(Bat);
+                        foreach (GameObject obj in link)
+                        {
+                            GameObject.Destroy(obj);
+                        }
 
-                HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = true;
+                        HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = true;
+                    }
+                };
+
             }
-            
+
         }
         public static void GrimmSlug()
         {
             var sc = HeroController.instance.spellControl;
+
             HeroController.instance.AffectedByGravity(false);
 
             sc.RemoveTransition("Focus S", "LEFT GROUND");
@@ -125,15 +136,15 @@ namespace Nightmare_Spark
             Bat = GameObject.Instantiate(Nightmare_Spark.realBat);
             Bat.layer = (int)PhysLayers.PLAYER;
             Bat.SetActive(true);
+            batEndClip = Bat.LocateMyFSM("Control").GetState("End").GetAction<Tk2dPlayAnimationWithEvents>(0).clipName.Value;
             GameObject.Destroy(Bat.LocateMyFSM("Control"));
             Bat.RemoveComponent<HealthManager>();
             Bat.GetComponent<MeshRenderer>().enabled = true;
 
 
 
-
             HeroController.instance.transform.Find("Focus Effects").Find("Lines Anim").GetComponent<tk2dSprite>().color = new Color(0.7f, 0, 0, 1);
-
+           
 
 
             HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = false;
@@ -185,11 +196,20 @@ namespace Nightmare_Spark
 
             tether = HeroController.instance.transform.position;
             GameObject circle = new();
-            circle.name = "circle";
             circle.AddComponent<Circle>();
             circle.transform.position = HeroController.instance.transform.position - new Vector3(0, 1.1f, 0);
+            /*GameObject collider = new();
+            collider.transform.parent = circle.transform;
+            collider.name = "Collider";
+            collider.AddComponent<CircleCollider2D>();
+            collider.GetComponent<CircleCollider2D>().radius = GrimmSlugIndicatorRange;
+            collider.GetComponent<CircleCollider2D>().transform.position = tether;
+            //collider.GetComponent<CircleCollider2D>()
+            collider.layer = (int)PhysLayers.HERO_DETECTOR;*/
+            
             GameManager.instance.StartCoroutine(Timer(circle));
-
+            
+            
 
         }
         private static IEnumerator Timer(GameObject circle)
@@ -220,8 +240,8 @@ namespace Nightmare_Spark
                 limit = gameObject.GetComponent<LineRenderer>();
                 limit.material = new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
                 limit.name = "Limit";
-                limit.startWidth = .2f;
-                limit.endWidth = .2f;
+                limit.startWidth = .1f;
+                limit.endWidth = .1f;
                 limit.SetVertexCount(segments + 1);
                 limit.useWorldSpace = false;
                 CreatePoints();
@@ -268,6 +288,7 @@ namespace Nightmare_Spark
                 }
 
             }
+          
         }
     }
 }

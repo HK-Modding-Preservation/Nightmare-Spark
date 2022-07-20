@@ -4,7 +4,6 @@ namespace Nightmare_Spark
     internal class Firebat
     {
         private static GameObject nkg = Nightmare_Spark.nkg;
-        private static GameObject burst = Nightmare_Spark.burst;
         public static string SpawnBat(int spellLevel)
         {
             if (PlayerData.instance.GetBool("equippedCharm_10"))
@@ -12,10 +11,11 @@ namespace Nightmare_Spark
                 GameObject firebat = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
                 GameObject.Destroy(firebat.LocateMyFSM("Control"));
                 firebat.layer = (int)PhysLayers.HERO_ATTACK;
-                var col = firebat.GetComponent<Collider2D>();
-                col.enabled = true;       
+                GameObject.Destroy(firebat.Find("Flash Damage"));
+                firebat.Find("Hero Hurter").active = false;
+                firebat.GetComponent<CircleCollider2D>().isTrigger = true;
                 Nightmare_Spark.AddDamageEnemy(firebat).damageDealt = (int)(spellLevel * 3.5f);
-                
+
                 foreach (var DH in firebat.GetComponentsInChildren<DamageHero>())
                 {
                     GameObject.Destroy(DH);
@@ -23,6 +23,22 @@ namespace Nightmare_Spark
                 firebat.AddComponent<NonBouncer>();
                 firebat.AddComponent<MonoBehaviourForBigBat>();
                 firebat.transform.position = HeroController.instance.transform.position - new Vector3(0, 0.5f, 0);
+
+
+                var burst = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
+                burst.name = "Burst";
+                burst.active = false;
+                burst.transform.parent = firebat.transform;
+                GameObject.Destroy(burst.LocateMyFSM("damages_hero"));
+                Nightmare_Spark.AddDamageEnemy(burst).damageDealt = 10;
+                burst.gameObject.GetComponent<ParticleSystem>().startSize = 200;
+
+                burst.gameObject.SetScale(1.75f, 1.75f);
+                burst.layer = (int)PhysLayers.HERO_ATTACK;
+                burst.AddComponent<NonBouncer>();
+
+                burst.transform.position = firebat.transform.position - new Vector3(0, 0, 0);
+               
             }
             else
             {
@@ -41,10 +57,9 @@ namespace Nightmare_Spark
                 firebat.AddComponent<MyMonoBehaviourForBats>();
                 GameObject.Destroy(firebat.LocateMyFSM("Control"));
                 firebat.layer = (int)PhysLayers.HERO_ATTACK;
-                var col = firebat.GetComponent<Collider2D>();
-                col.enabled = true;
-                col.isTrigger = true;
-
+                firebat.GetComponent<CircleCollider2D>().isTrigger = true;
+                GameObject.Destroy(firebat.Find("Flash Damage"));
+                firebat.Find("Hero Hurter").active = false;
                 if (PlayerData.instance.GetBool("equippedCharm_19"))
                 {
                     Nightmare_Spark.AddDamageEnemy(firebat).damageDealt = (int)(damage * 1.5f);
@@ -81,25 +96,21 @@ namespace Nightmare_Spark
             }
             if (hitInstance.Source.GetComponent<MonoBehaviourForBigBat>() != null)
             {
-                burst = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
-                GameObject.DontDestroyOnLoad(burst);
-                GameObject.Destroy(burst.LocateMyFSM("damages_hero"));
-
-                Nightmare_Spark.AddDamageEnemy(burst).damageDealt = 10;
-                burst.gameObject.GetComponent<ParticleSystem>().startSize = 200;
-
-                burst.gameObject.SetScale(1.75f, 1.75f);
-                burst.layer = (int)PhysLayers.HERO_ATTACK;
-                burst.AddComponent<NonBouncer>();
-                UnityEngine.Object.Instantiate(burst);
-                burst.transform.position = hitInstance.Source.transform.position - new Vector3(0, 0, 0);
-
+                hitInstance.Source.Find("Burst").active = true;
+                hitInstance.Source.GetComponent<Rigidbody2D>().velocity = Vector3.zero;
+                hitInstance.Source.GetComponent<MeshRenderer>().enabled = false;
+                hitInstance.Source.GetComponent<CircleCollider2D>().enabled = false;
                 //hitInstance.Source.transform.Find("Impact").gameObject.active = true;
                 //hitInstance.Source.GetComponent<tk2dSpriteAnimator>().Play("Impact");
-                //GameManager.instance.StartCoroutine(DestroyBat(hitInstance.Source));
-                GameObject.Destroy(hitInstance.Source);
+                GameManager.instance.StartCoroutine(Wait(hitInstance.Source));
+                
             }
             orig(self, hitInstance);
+        }
+        private static IEnumerator Wait(GameObject go)
+        {
+            yield return new WaitUntil(() => !go.Find("Burst").GetComponent<ParticleSystem>().isPlaying);
+            GameObject.Destroy(go);
         }
         private static IEnumerator DestroyBat(GameObject go)
         {
