@@ -30,6 +30,8 @@ back will light up, using the ability again will warp the Knight to the torch. U
 - The grimmkin warp ability will ocassionally leave behind non-functional torches, these vanish on scene change and cannot be warped to. Cause is unclear but spamming the CDash button in weird spots tends to cause it
 - Warping to a grimmkin torch as the Knight starts swimming will cause it to swim in mid-air.
 - Big bat inexplicably may damage the player. (Possibly fixed but I've thought that before)
+- The Shape of Unn synergy will sometimes cancel other audio or music.
+- Entering a boss fight, that has a "roar" effect that stuns the Knight, while using the Shape of Unn synergy will trap the player as a bat until they focus again or take damage.
 
 Hollow Knight Modding Discord server: https://discord.gg/VDsg3HmWuB  
 
