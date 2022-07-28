@@ -1,21 +1,21 @@
-﻿global using System;
-global using System.Collections;
-global using System.Collections.Generic;
-global using Modding;
-global using UnityEngine;
+﻿global using GlobalEnums;
 global using HutongGames.PlayMaker;
 global using HutongGames.PlayMaker.Actions;
-global using Satchel;
-global using Satchel.Futils;
-global using GlobalEnums;
-global using SFCore;
-global using SFCore.Generics;
 global using ItemChanger;
+global using ItemChanger.Locations;
 global using ItemChanger.Tags;
 global using ItemChanger.UIDefs;
-global using ItemChanger.Locations;
+global using Modding;
 global using MonoMod.RuntimeDetour;
+global using Satchel;
+global using Satchel.Futils;
+global using SFCore;
+global using SFCore.Generics;
+global using System;
+global using System.Collections;
+global using System.Collections.Generic;
 global using System.Reflection;
+global using UnityEngine;
 
 
 namespace Nightmare_Spark
@@ -148,6 +148,7 @@ namespace Nightmare_Spark
         {
             var indicatorTorch = GameObject.Instantiate(grimmkinSpawner.gameObject);
             GameObject.Destroy(indicatorTorch.LocateMyFSM("Spawn Control"));
+            GameObject.Destroy(indicatorTorch.Find("Hero Detector"));
             indicatorTorch.name = "Torch Indicator";
             indicatorTorch.transform.parent = self.transform;
             indicatorTorch.transform.position = self.transform.position + new Vector3(0.3f, -0.7f, 0);
@@ -157,6 +158,16 @@ namespace Nightmare_Spark
             indicatorTorch.active = false;
             indicatorTorch.Find("Active Effects").Find("Flame_smoke").active = false;
             indicatorTorch.Find("Active Effects").Find("lava_particles_03").active = false;
+
+            var warpTorch = GameObject.Instantiate(grimmkinSpawner.gameObject);
+            warpTorch.name = "Warp Torch";
+            warpTorch.transform.parent = GameManager.instance.transform.Find("GlobalPool").transform;
+            GameObject.Destroy(warpTorch.LocateMyFSM("Spawn Conytol"));
+            GameObject.Destroy(warpTorch.Find("Hero Detector"));
+            warpTorch.Find("Active Effects").active = false;
+            warpTorch.active = false;
+
+
             orig(self);
         }
 

@@ -13,7 +13,7 @@ namespace Nightmare_Spark
         public static bool warpActive = false;
         public static bool warped = false;
         public static GameObject noviceObj;
-        public static GameObject activeTorch;
+        // public static GameObject activeTorch;
         public static bool choice = false;
         public static bool conditions = false;
         internal static void SceneChange(Scene From, Scene To)
@@ -140,23 +140,20 @@ namespace Nightmare_Spark
             noviceObj.Find("Explode Effects").Find("Flame Ring").active = false;
             noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().maxParticleSize = .1f;
             noviceObj.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = false;
-            Modding.Logger.Log("Finished die clip");
             noviceObj.GetComponent<MeshRenderer>().enabled = false;
-            Modding.Logger.Log("Spawning Torch");
-            var torch = GameObject.Instantiate(Nightmare_Spark.grimmkinSpawnerSmall);
-            GameObject.Destroy(torch.LocateMyFSM("Spawn Control"));
-            GameObject.Destroy(torch.Find("Hero Detector"));
-            activeTorch = torch.gameObject;
+            var torch = GameManager.instance.transform.Find("Warp Torch");
+            //activeTorch = torch.gameObject;
             torch.transform.position = noviceObj.transform.position;
-            torch.active = true;
+            torch.gameObject.active = true;
             GameManager.instance.StartCoroutine(Warp());
         }
 
         private static IEnumerator Warp()
-        {         
-            yield return new WaitUntil(() => activeTorch != null);
-            HeroController.instance.transform.position = activeTorch.transform.position;
-            GameObject.Destroy(activeTorch);
+        {
+            var torch = GameManager.instance.transform.Find("Warp Torch").gameObject;
+            yield return new WaitUntil(() => torch.active);
+            HeroController.instance.transform.position = torch.transform.position;
+            torch.active = false;
             warped = true;
             HeroController.instance.transform.Find("Torch Indicator").gameObject.active = false;
 
@@ -188,15 +185,11 @@ namespace Nightmare_Spark
                 noviceObj.Find("Explode Effects").Find("Flame Ring").active = false;
                 noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().maxParticleSize = .1f;
                 gameObject.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = false;
-                Modding.Logger.Log("Finished die clip");
                 gameObject.GetComponent<MeshRenderer>().enabled = false;
-                Modding.Logger.Log("Spawning Torch");
-                var torch = GameObject.Instantiate(Nightmare_Spark.grimmkinSpawnerSmall);
-                GameObject.Destroy(torch.LocateMyFSM("Spawn Control"));
-                GameObject.Destroy(torch.Find("Hero Detector"));
+                var torch = GameManager.instance.transform.Find("Warp Torch").gameObject;
                 torch.transform.position = gameObject.transform.position;
                 torch.active = true;
-                activeTorch = torch.gameObject;
+                //activeTorch = torch.gameObject;
                 hitWall = true;
             }
         }

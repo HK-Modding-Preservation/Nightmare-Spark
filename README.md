@@ -27,7 +27,6 @@ back will light up, using the ability again will warp the Knight to the torch. U
 - Various audio effects are NOT effected by the in-game volume sliders, their volumes have been drastically lowered to account for this.
 - The charm will NOT spawn into the world in saves created before the mod was installed, only in new saves. Use debug mod or edit the local save settings to get around this.
 - Grimmchild's pillar synergy will sometimes not proc on the third hit if grimmchild is too close to the target, however the next hit will spawn the fire pillar properly.
-- The grimmkin warp ability will ocassionally leave behind non-functional torches, these vanish on scene change and cannot be warped to. Cause is unclear but spamming the CDash button in weird spots tends to cause it
 - Warping to a grimmkin torch as the Knight starts swimming will cause it to swim in mid-air.
 - Big bat inexplicably may damage the player. (Possibly fixed but I've thought that before)
 - The Shape of Unn synergy will sometimes cancel other audio or music.
