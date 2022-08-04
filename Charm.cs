@@ -21,6 +21,7 @@ namespace Nightmare_Spark
         public bool[] equippedCharms = new[] { false };
         public int[] charmCosts = new[] { 2 };
         public static bool dP = false;
+        public bool PlacedCharm = false;
     }
 
     public class TextureStrings

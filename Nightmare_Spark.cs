@@ -56,7 +56,7 @@ namespace Nightmare_Spark
         public static GameObject? grimmSpike;
         public static AudioSource? audioSource;
         public static tk2dSpriteAnimation? spikeAnimation;
-        public bool Placed = false;
+        
         public override void Initialize(Dictionary<string, Dictionary<string, GameObject>> preloadedObjects)
         {
             Log("Initializing");
@@ -99,6 +99,7 @@ namespace Nightmare_Spark
             InitCallbacks();
             On.HeroController.Awake += AddChild;
             On.PlayMakerFSM.Awake += FSMAwake;
+           // ModHooks.HeroUpdateHook += test;
             ModHooks.DashPressedHook += Firetrail.StartTrail;
             ModHooks.SetPlayerBoolHook += CheckCharms;
             On.HealthManager.TakeDamage += Firebat.BatDie;
@@ -107,11 +108,17 @@ namespace Nightmare_Spark
             On.DamageEnemies.FixedUpdate += ErrorBegone;
             ModHooks.HeroUpdateHook += GrimmkinWarp.WarpMain;
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged += GrimmkinWarp.SceneChange;
+            On.UIManager.ContinueGame += (On.UIManager.orig_ContinueGame orig, global::UIManager self) =>
+            {
+                ItemChangerMod.CreateSettingsProfile(overwrite: false, createDefaultModules: false);
+                orig(self);
+            };
             On.UIManager.StartNewGame += (On.UIManager.orig_StartNewGame orig, UIManager self, bool permaDeath, bool bossRush) =>
             {
                 ItemChangerMod.CreateSettingsProfile(overwrite: false, createDefaultModules: false);
                 orig(self, permaDeath, bossRush);
             };
+        
             ModHooks.SetPlayerBoolHook += (string target, bool orig) =>
             { 
                 var pd = PlayerData.instance;
@@ -119,7 +126,7 @@ namespace Nightmare_Spark
                 {
                     SaveSettings.gotCharms[0] = true;
                 }
-                if (!Placed && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && pd.GetBool("destroyedNightmareLantern") || !Placed && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && pd.GetBool("killedNightmareGrimm"))
+                if (!SaveSettings.PlacedCharm && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && pd.GetBool("destroyedNightmareLantern") || !SaveSettings.PlacedCharm && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && pd.GetBool("killedNightmareGrimm"))
                 {
                     float xpos = 47.2f;
                     float ypos = 4.4f;
@@ -137,13 +144,19 @@ namespace Nightmare_Spark
                         .Wrap()
                         .Add(Finder.GetItem(name)));
                     ItemChangerMod.AddPlacements(placements, conflictResolution: PlacementConflictResolution.Ignore);
-                    Placed = true;
+                    SaveSettings.PlacedCharm = true;
                 }
                 return orig;
             };
             Log("Initialized");
         }
-
+        private void test()
+        {
+            if (ShapeOfGrimm.cancelGs)
+            {
+                Log("A");
+            }
+        }
         private void AddChild(On.HeroController.orig_Awake orig, HeroController self)
         {
             var indicatorTorch = GameObject.Instantiate(grimmkinSpawner.gameObject);
@@ -162,7 +175,7 @@ namespace Nightmare_Spark
             var warpTorch = GameObject.Instantiate(grimmkinSpawner.gameObject);
             warpTorch.name = "Warp Torch";
             warpTorch.transform.parent = GameManager.instance.transform.Find("GlobalPool").transform;
-            GameObject.Destroy(warpTorch.LocateMyFSM("Spawn Conytol"));
+            GameObject.Destroy(warpTorch.LocateMyFSM("Spawn Control"));
             GameObject.Destroy(warpTorch.Find("Hero Detector"));
             warpTorch.Find("Active Effects").active = false;
             warpTorch.active = false;
@@ -332,6 +345,30 @@ namespace Nightmare_Spark
                 FsmState castSlug = self.GetState("Focus S");
                 castSlug.InsertCustomAction("Focus S", () => ShapeOfGrimm.GrimmSlug(), 15);
             }
+            if (self.gameObject.name == "Knight" && self.FsmName == "Roar Lock")
+            {
+                Log("1");
+                self.GetState("Lock Start").InsertCustomAction(() => ShapeOfGrimm.cancelGs = true, 10);
+                self.GetState("Regain Control").InsertCustomAction(() => ShapeOfGrimm.cancelGs = false, 3);
+            }
+            if (self.gameObject.name == "Final Boss Door" && self.FsmName == "Control")
+            {
+                Log("2");
+                self.GetState("Take Control").InsertCustomAction(() => ShapeOfGrimm.cancelGs = true, 10);
+                self.GetState("End").InsertCustomAction(() => ShapeOfGrimm.cancelGs = false, 4);
+            }
+            if (self.gameObject.name == "Hornet Fountain Encounter" && self.FsmName == "Control")
+            {
+                Log("3");
+                self.GetState("Take Control").InsertCustomAction(() => ShapeOfGrimm.cancelGs = true, 11);
+                self.GetState("End").InsertCustomAction(() => ShapeOfGrimm.cancelGs = false, 5);
+            }
+            if (self.gameObject.name == "Grimm Scene" && self.FsmName == "Initial Scene")
+            {
+                Log("4");
+                self.GetState("Take Control").InsertCustomAction(() => ShapeOfGrimm.cancelGs = true, 11);
+                self.GetState("End").InsertCustomAction(() => ShapeOfGrimm.cancelGs = false, 6);
+            }
         }
         public bool sdashtransition = false;
         private bool CheckCharms(string target, bool orig)
@@ -482,8 +519,23 @@ namespace Nightmare_Spark
                     (Action orig) =>
                     {
                         SaveSettings.gotCharms[0] = true;
+                        SaveSettings.equippedCharms[0] = false;
                         orig();
-                        
+
+                    }
+                );
+                var methodRemove = commands.GetMethod("RemoveAllCharms", BindingFlags.Public | BindingFlags.Static);
+                if (methodRemove == null)
+                {
+                    return;
+                }
+                new Hook(
+                    methodRemove,
+                    (Action orig) =>
+                    {
+                        SaveSettings.gotCharms[0] = false;
+                        orig();
+
                     }
                 );
             }

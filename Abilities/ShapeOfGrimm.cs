@@ -15,7 +15,7 @@ namespace Nightmare_Spark
         private static Vector3 tether;
         private static string batEndClip;
         private static GameObject[] link = new GameObject[6];
-
+        public static bool cancelGs;
 
         //private static float tetherx;
         //private static float tethery;
@@ -72,15 +72,15 @@ namespace Nightmare_Spark
                 sc.GetState("Focus Right").GetAction<SetParticleEmissionRate>(9).emissionRate.Value = 0f;
                 sc.GetState("Focus Right").GetAction<SetParticleEmissionRate>(10).emissionRate.Value = 0f;
                 HeroController.instance.GetComponent<Rigidbody2D>().velocity = new Vector2(gshorizontal, gsvertical);
-                
+
                 float distance = HeroController.instance.transform.position.sqrMagnitude - tether.sqrMagnitude;
                 float xdistance = HeroController.instance.transform.position.x - tether.x;
-                float ydistance = (HeroController.instance.transform.position.y -1) - tether.y + 1;
+                float ydistance = (HeroController.instance.transform.position.y - 1) - tether.y + 1;
                 for (int i = 0; i < 5; i++)
                 {
                     if (link[i] != null)
                     {
-                        link[i].transform.position = tether - new Vector3(-(xdistance / 5) * i, -(ydistance / 5 * i) +1, 0);
+                        link[i].transform.position = tether - new Vector3(-(xdistance / 5) * i, -(ydistance / 5 * i) + 1, 0);
                     }
 
 
@@ -92,9 +92,11 @@ namespace Nightmare_Spark
                 Bat.transform.position = HeroController.instance.transform.position - new Vector3(0, 1, 0);
             }
 
-            if (gsActive && !sc.GetState("Focus Cancel 2").GetAction<SetBoolValue>(16).boolVariable.Value || gsActive && !sc.GetState("Focus Get Finish 2").GetAction<SetBoolValue>(15).boolVariable.Value)
+            if (gsActive && !sc.GetState("Focus Cancel 2").GetAction<SetBoolValue>(16).boolVariable.Value || gsActive && !sc.GetState("Focus Get Finish 2").GetAction<SetBoolValue>(15).boolVariable.Value || gsActive && cancelGs)// || gsActive && HeroController.instance.controlReqlinquished)
             {
                 gsActive = false;
+               
+               
 
                 sc.AddTransition("Focus S", "LEFT GROUND", "Grace Check 2");
                 sc.AddTransition("Focus Left", "LEFT GROUND", "Grace Check 2");
@@ -103,7 +105,6 @@ namespace Nightmare_Spark
                 HeroController.instance.AffectedByGravity(true);
 
                 HeroController.instance.transform.Find("Focus Effects").Find("Lines Anim").GetComponent<tk2dSprite>().color = new Color(1f, 1, 1, 1);
-                
 
                 Bat.GetComponent<tk2dSpriteAnimator>().Play(batEndClip);
                 Bat.GetComponent<tk2dSpriteAnimator>().AnimationCompleted += (caller, clip) =>
@@ -119,10 +120,15 @@ namespace Nightmare_Spark
                         HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = true;
                     }
                 };
+                if (cancelGs)
+                {
+                    HeroController.instance.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+                }
 
             }
 
         }
+
         public static void GrimmSlug()
         {
             var sc = HeroController.instance.spellControl;
@@ -214,10 +220,7 @@ namespace Nightmare_Spark
         }
         private static IEnumerator Timer(GameObject circle)
         {
-            yield return new WaitWhile(() => HeroController.instance.spellControl.FsmVariables.FindFsmBool("Focusing").Value)
-            {
-
-            };
+            yield return new WaitUntil(() => !HeroController.instance.spellControl.FsmVariables.FindFsmBool("Focusing").Value || cancelGs);
             GameObject.Destroy(circle);
 
 

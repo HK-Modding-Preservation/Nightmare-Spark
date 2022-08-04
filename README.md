@@ -20,17 +20,15 @@ Charm can also be acquired with Debug Mods "Give All Charms" button/keybind, by 
 * 1. At close range Grimmchild will fire a larger fireball that will explode into a pillar of fire on impact.
 * 2. At medium range Grimmchild will fire 4 extra fireballs for a total of 5 in a volley of 3 then 2.
 * 3. At long range Grimmchild will eject a spiral of fireballs.
-* Sprint Master: Using Crystal Dash will instead fire out a grimmkin novice and leaving the Knight with full movement, once it hits terrain it will place a torch and the torch on the Knight's   
-back will light up, using the ability again will warp the Knight to the torch. Using it before it reaches a wall will warp the Knight early.
+* Sprint Master: Using Crystal Dash will instead fire out a grimmkin novice, leaving the Knight with full movement, once it hits terrain it will leave behind a torch, and the smaller torch on the Knight's   
+back will ignite, using the ability again will warp the Knight to the torch. Using it before it reaches a wall will warp the Knight early.
 
 !KNOWN ISSUES! (These are unlikely to be fixed)
 - Various audio effects are NOT effected by the in-game volume sliders, their volumes have been drastically lowered to account for this.
-- The charm will NOT spawn into the world in saves created before the mod was installed, only in new saves. Use debug mod or edit the local save settings to get around this.
 - Grimmchild's pillar synergy will sometimes not proc on the third hit if grimmchild is too close to the target, however the next hit will spawn the fire pillar properly.
 - Warping to a grimmkin torch as the Knight starts swimming will cause it to swim in mid-air.
-- Big bat inexplicably may damage the player. (Possibly fixed but I've thought that before)
 - The Shape of Unn synergy will sometimes cancel other audio or music.
-- Entering a boss fight, that has a "roar" effect that stuns the Knight, while using the Shape of Unn synergy will trap the player as a bat until they focus again or take damage.
+- The Shape of Unn synergy will be stuttery when at the edge of the limit.
 
 Hollow Knight Modding Discord server: https://discord.gg/VDsg3HmWuB  
 

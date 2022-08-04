@@ -141,7 +141,7 @@ namespace Nightmare_Spark
             noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().maxParticleSize = .1f;
             noviceObj.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = false;
             noviceObj.GetComponent<MeshRenderer>().enabled = false;
-            var torch = GameManager.instance.transform.Find("Warp Torch");
+            var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch");
             //activeTorch = torch.gameObject;
             torch.transform.position = noviceObj.transform.position;
             torch.gameObject.active = true;
@@ -150,7 +150,7 @@ namespace Nightmare_Spark
 
         private static IEnumerator Warp()
         {
-            var torch = GameManager.instance.transform.Find("Warp Torch").gameObject;
+            var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch").gameObject;
             yield return new WaitUntil(() => torch.active);
             HeroController.instance.transform.position = torch.transform.position;
             torch.active = false;
@@ -186,7 +186,7 @@ namespace Nightmare_Spark
                 noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().maxParticleSize = .1f;
                 gameObject.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = false;
                 gameObject.GetComponent<MeshRenderer>().enabled = false;
-                var torch = GameManager.instance.transform.Find("Warp Torch").gameObject;
+                var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch").gameObject;
                 torch.transform.position = gameObject.transform.position;
                 torch.active = true;
                 //activeTorch = torch.gameObject;
