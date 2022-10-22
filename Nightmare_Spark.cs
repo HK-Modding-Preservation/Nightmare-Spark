@@ -11,6 +11,9 @@ global using Satchel;
 global using Satchel.Futils;
 global using SFCore;
 global using SFCore.Generics;
+global using HKMirror;
+global using HKMirror.Reflection;
+global using HKMirror.Reflection.SingletonClasses;
 global using System;
 global using System.Collections;
 global using System.Collections.Generic;
@@ -122,11 +125,11 @@ namespace Nightmare_Spark
             ModHooks.SetPlayerBoolHook += (string target, bool orig) =>
             { 
                 var pd = PlayerData.instance;
-                if (pd.GetBool("bossRushMode"))
+                if (PlayerDataAccess.bossRushMode)
                 {
                     SaveSettings.gotCharms[0] = true;
                 }
-                if (!SaveSettings.PlacedCharm && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && pd.GetBool("destroyedNightmareLantern") || !SaveSettings.PlacedCharm && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && pd.GetBool("killedNightmareGrimm"))
+                if (!SaveSettings.PlacedCharm && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && PlayerDataAccess.destroyedNightmareLantern || !SaveSettings.PlacedCharm && !pd.GetBool($"gotCharm_{CharmIDs[0]}") && PlayerDataAccess.killedNightmareGrimm)
                 {
                     float xpos = 47.2f;
                     float ypos = 4.4f;
@@ -378,7 +381,7 @@ namespace Nightmare_Spark
 
             var sdash = HeroController.instance.superDash;
             
-            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_37"))
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerDataAccess.equippedCharm_37)
             {
                 if (!sdashtransition)
                 {
@@ -404,7 +407,7 @@ namespace Nightmare_Spark
            
             FsmState castQuakeDive = HeroController.instance.spellControl.GetState("Q1 Effect");
             FsmState castQuakeDark = HeroController.instance.spellControl.GetState("Q2 Effect");
-            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_33"))
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerDataAccess.equippedCharm_33)
             {
                 castQuakeDive.GetAction<CustomFsmAction>(4).Enabled = true;
                 castQuakeDark.GetAction<CustomFsmAction>(4).Enabled = true;
@@ -419,7 +422,7 @@ namespace Nightmare_Spark
 
             FsmState castShadeSoul = HeroController.instance.spellControl.GetState("Fireball 2");
             FsmState castVengefulSpirit = HeroController.instance.spellControl.GetState("Fireball 1");
-            if (PlayerData.instance.GetBool("equippedCharm_11") && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
+            if (PlayerDataAccess.equippedCharm_11 && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
             {
                 castShadeSoul.GetAction<SpawnObjectFromGlobalPool>(3).Enabled = false;
                 castShadeSoul.GetAction<CustomFsmAction>(4).Enabled = true;
@@ -438,8 +441,8 @@ namespace Nightmare_Spark
 
             //--------Grimmchild--------//
 
-            int gcLevel = PlayerData.instance.GetInt("grimmChildLevel");
-            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_40") && gcLevel <= 4 && gcLevel > 1)
+            int gcLevel = PlayerDataAccess.grimmChildLevel;
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerDataAccess.equippedCharm_40 && gcLevel <= 4 && gcLevel > 1)
             {
                 var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
                 PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
@@ -464,9 +467,9 @@ namespace Nightmare_Spark
 
 
             //--------Carefree/Thorns--------//
-            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && gcLevel == 5 && PlayerData.instance.GetBool("equippedCharm_40"))
+            if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && gcLevel == 5 && PlayerDataAccess.equippedCharm_40)
             {
-                if (PlayerData.instance.GetBool("equippedCharm_12"))
+                if (PlayerDataAccess.equippedCharm_12)
                 {
                     CarefreeSpikes.NightmareSpikeActivate();
                 }
@@ -481,7 +484,7 @@ namespace Nightmare_Spark
  
             var sc = HeroController.instance.spellControl;
             FsmState castSlug = HeroController.instance.spellControl.GetState("Focus S");
-            if (PlayerData.instance.GetBool("equippedCharm_28") && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
+            if (PlayerDataAccess.equippedCharm_28 && PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}"))
             {
                 castSlug.GetAction<CustomFsmAction>(15).Enabled = true;
             }
