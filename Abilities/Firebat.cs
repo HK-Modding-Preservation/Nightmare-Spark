@@ -6,7 +6,7 @@ namespace Nightmare_Spark
         private static GameObject nkg = Nightmare_Spark.nkg;
         public static string SpawnBat(int spellLevel)
         {
-            if (PlayerData.instance.GetBool("equippedCharm_10"))
+            if (PlayerDataAccess.equippedCharm_10)
             {
                 GameObject firebat = GameObject.Instantiate(nkg.LocateMyFSM("Control").GetState("Firebat 1").GetAction<SpawnObjectFromGlobalPool>(2).gameObject.Value);
                 GameObject.Destroy(firebat.LocateMyFSM("Control"));
@@ -60,7 +60,7 @@ namespace Nightmare_Spark
                 firebat.GetComponent<CircleCollider2D>().isTrigger = true;
                 GameObject.Destroy(firebat.Find("Flash Damage"));
                 firebat.Find("Hero Hurter").active = false;
-                if (PlayerData.instance.GetBool("equippedCharm_19"))
+                if (PlayerDataAccess.equippedCharm_19)
                 {
                     Nightmare_Spark.AddDamageEnemy(firebat).damageDealt = (int)(damage * 1.5f);
                 }
