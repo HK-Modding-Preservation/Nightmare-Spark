@@ -29,7 +29,7 @@ namespace Nightmare_Spark
         public static Nightmare_Spark Instance;
 
         new public string GetName() => "NightmareSpark";
-        public override string GetVersion() => "V1.1";
+        public override string GetVersion() => "V1.2";
         public Nightmare_Spark() : base("Nightmare Spark")
         {
             Ts = new TextureStrings();
