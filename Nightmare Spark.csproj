@@ -96,6 +96,9 @@
         <Reference Include="SFCore">
           <HintPath>..\Dependencies\SFCore\SFCore.dll</HintPath>
         </Reference>
+        <Reference Include="HKMirror">
+          <HintPath>..\Dependencies\HKMirror\HKMirror.dll</HintPath>
+        </Reference>
         <Reference Include="System.ComponentModel.Composition">
             <HintPath>$(HollowKnightRefs)/System.ComponentModel.Composition.dll</HintPath>
         </Reference>
