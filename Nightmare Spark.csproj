@@ -15,7 +15,7 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <HollowKnightRefs>..\API</HollowKnightRefs>
-        <ExportDir>bin\Publish</ExportDir>
+        <ExportDir>C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\Nightmare_Spark</ExportDir>
     </PropertyGroup>
 
     <Import Project="LocalOverrides.targets" Condition="Exists('LocalOverrides.targets')" />
@@ -60,6 +60,9 @@
         <Reference Include="GalaxyCSharp">
             <HintPath>$(HollowKnightRefs)/GalaxyCSharp.dll</HintPath>
         </Reference>
+        <Reference Include="HKMirror">
+          <HintPath>..\Dependencies\HKMirror\HKMirror.dll</HintPath>
+        </Reference>
         <Reference Include="ItemChanger">
           <HintPath>..\Dependencies\ItemChanger\ItemChanger.dll</HintPath>
         </Reference>
@@ -95,9 +98,6 @@
         </Reference>
         <Reference Include="SFCore">
           <HintPath>..\Dependencies\SFCore\SFCore.dll</HintPath>
-        </Reference>
-        <Reference Include="HKMirror">
-          <HintPath>..\Dependencies\HKMirror\HKMirror.dll</HintPath>
         </Reference>
         <Reference Include="System.ComponentModel.Composition">
             <HintPath>$(HollowKnightRefs)/System.ComponentModel.Composition.dll</HintPath>

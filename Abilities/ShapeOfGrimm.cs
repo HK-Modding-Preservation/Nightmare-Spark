@@ -16,6 +16,7 @@ namespace Nightmare_Spark
         private static string batEndClip;
         private static GameObject[] link = new GameObject[6];
         public static bool cancelGs;
+        public static GameObject Circ;
 
         //private static float tetherx;
         //private static float tethery;
@@ -92,7 +93,7 @@ namespace Nightmare_Spark
                 Bat.transform.position = HeroController.instance.transform.position - new Vector3(0, 1, 0);
             }
 
-            if (gsActive && !sc.GetState("Focus Cancel 2").GetAction<SetBoolValue>(16).boolVariable.Value || gsActive && !sc.GetState("Focus Get Finish 2").GetAction<SetBoolValue>(15).boolVariable.Value || gsActive && cancelGs)// || gsActive && HeroController.instance.controlReqlinquished)
+            if (gsActive && !sc.GetState("Focus Cancel 2").GetAction<SetBoolValue>(16).boolVariable.Value || gsActive && !sc.GetState("Focus Get Finish 2").GetAction<SetBoolValue>(15).boolVariable.Value || gsActive && cancelGs || gsActive && HeroController.instance.cState.swimming)
             {
                 gsActive = false;
                
@@ -102,7 +103,11 @@ namespace Nightmare_Spark
                 sc.AddTransition("Focus Left", "LEFT GROUND", "Grace Check 2");
                 sc.AddTransition("Focus Right", "LEFT GROUND", "Grace Check 2");
 
-                HeroController.instance.AffectedByGravity(true);
+                if (!HeroController.instance.cState.swimming)
+                {
+                    HeroController.instance.AffectedByGravity(true);
+                }
+                
 
                 HeroController.instance.transform.Find("Focus Effects").Find("Lines Anim").GetComponent<tk2dSprite>().color = new Color(1f, 1, 1, 1);
 
@@ -116,7 +121,7 @@ namespace Nightmare_Spark
                         {
                             GameObject.Destroy(obj);
                         }
-
+                        GameObject.Destroy(Circ);
                         HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = true;
                     }
                 };
@@ -204,6 +209,7 @@ namespace Nightmare_Spark
             GameObject circle = new();
             circle.AddComponent<Circle>();
             circle.transform.position = HeroController.instance.transform.position - new Vector3(0, 1.1f, 0);
+            Circ = circle;
             /*GameObject collider = new();
             collider.transform.parent = circle.transform;
             collider.name = "Collider";
@@ -212,19 +218,19 @@ namespace Nightmare_Spark
             collider.GetComponent<CircleCollider2D>().transform.position = tether;
             //collider.GetComponent<CircleCollider2D>()
             collider.layer = (int)PhysLayers.HERO_DETECTOR;*/
-            
-            GameManager.instance.StartCoroutine(Timer(circle));
-            
-            
+
+            //GameManager.instance.StartCoroutine(Timer(circle));
+
+
 
         }
-        private static IEnumerator Timer(GameObject circle)
+        /*private static IEnumerator Timer(GameObject circle)
         {
             yield return new WaitUntil(() => !HeroController.instance.spellControl.FsmVariables.FindFsmBool("Focusing").Value || cancelGs);
             GameObject.Destroy(circle);
 
 
-        }
+        }*/
         [RequireComponent(typeof(LineRenderer))]
         public class Circle : MonoBehaviour
         {
