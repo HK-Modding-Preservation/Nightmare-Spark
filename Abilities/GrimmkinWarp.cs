@@ -31,7 +31,7 @@ namespace Nightmare_Spark
 
         public static void WarpMain()
         {
-            if (PlayerData.instance.GetBool($"equippedCharm_{Nightmare_Spark.Instance.CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_37"))
+            if (PlayerData.instance.GetBool($"equippedCharm_{Nightmare_Spark.Instance.CharmIDs[0]}") && PlayerDataAccess.equippedCharm_37)
             {
                 var heroActions = InputHandler.Instance.inputActions;
 
@@ -81,9 +81,13 @@ namespace Nightmare_Spark
 
         private static void CheckConditions()
         {
-            var reflection = Satchel.Reflected.HeroControllerR.cState;
-            if (!reflection.dashing && !reflection.attacking && !reflection.dead && !reflection.casting && !reflection.focusing && !reflection.isPaused && !reflection.swimming &&
-                !HeroController.instance.controlReqlinquished && !Satchel.Reflected.HeroControllerR.hardLanded && PlayerData.instance.GetBool("hasSuperDash")){conditions = true;}
+            var cState = HeroControllerR.cState;
+            if (!cState.dashing && !cState.attacking && !cState.dead && !cState.casting && !cState.focusing &&
+                !cState.isPaused && !cState.swimming &&
+                !HeroControllerR.controlReqlinquished && !HeroControllerR.hardLanded && PlayerDataAccess.hasSuperDash)
+            {
+                conditions = true;
+            }
             else 
             {
                 conditions = false;

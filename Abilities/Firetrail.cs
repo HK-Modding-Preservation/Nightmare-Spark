@@ -10,10 +10,10 @@
         private static GameObject trail;
         public static bool StartTrail()
         {
-            if (Satchel.Reflected.HeroControllerR.CanDash() == true && (PlayerData.instance.GetBool($"equippedCharm_{Nightmare_Spark.Instance.CharmIDs[0]}")))
+            if (HeroControllerR.CanDash() == true && (PlayerData.instance.GetBool($"equippedCharm_{Nightmare_Spark.Instance.CharmIDs[0]}")))
             {
                 float duration;
-                if (PlayerData.instance.GetBool("equippedCharm_31"))
+                if (PlayerDataAccess.equippedCharm_31)
                 {
                     duration = 1f;
                 }
@@ -52,7 +52,7 @@
                 trail = GameObject.Instantiate(Nightmare_Spark.nkg.LocateMyFSM("Control").GetState("AD Fire").GetAction<SpawnObjectFromGlobalPoolOverTime>(7).gameObject.Value);
                 GameObject.DontDestroyOnLoad(trail);
                 UnityEngine.Object.Destroy(trail.LocateMyFSM("damages_hero"));
-                if (PlayerData.instance.GetBool("equippedCharm_19"))
+                if (PlayerDataAccess.equippedCharm_19)
                 {
                     Nightmare_Spark.AddDamageEnemy(trail).damageDealt = 20;
                 }

@@ -75,7 +75,7 @@
 
         private static void GrimmchildBurst(GameObject grimmchild)
         {
-            int gcLevel = PlayerData.instance.GetInt("grimmChildLevel");
+            int gcLevel = PlayerDataAccess.grimmChildLevel;
             Modding.Logger.Log("Picked Burst");
             if (gcLevel == 4)
             {

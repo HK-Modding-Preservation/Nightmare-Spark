@@ -155,9 +155,9 @@ namespace Nightmare_Spark
 
             HeroController.instance.gameObject.GetComponent<MeshRenderer>().enabled = false;
 
-            if (PlayerData.instance.GetBool($"equippedCharm_7"))
+            if (PlayerDataAccess.equippedCharm_7)
             {
-                if (PlayerData.instance.GetBool($"equippedCharm_34"))
+                if (PlayerDataAccess.equippedCharm_34)
                 {
                     // Quick Focus + Deep Focus 
                     GrimmSlugVelocity = 12;
@@ -172,7 +172,7 @@ namespace Nightmare_Spark
             }
             else
             {
-                if (PlayerData.instance.GetBool("equippedCharm_34"))
+                if (PlayerDataAccess.equippedCharm_34)
                 {
                     // Deep Focus
                     GrimmSlugVelocity = 9;
