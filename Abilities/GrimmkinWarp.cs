@@ -16,11 +16,17 @@ namespace Nightmare_Spark
         // public static GameObject activeTorch;
         public static bool choice = false;
         public static bool conditions = false;
+        public static float oldscale = 1;
         internal static void SceneChange(Scene From, Scene To)
         {
             pressCount = 0;
             warpActive = false;
-            warped = false; 
+            warped = false;
+            choice = false;
+            Time.timeScale = oldscale;
+            var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch").gameObject;
+            torch.active = false;
+            GameManager.instance.StopCoroutine(Warp());
         }
 
         public static void WarpMain()
@@ -40,9 +46,19 @@ namespace Nightmare_Spark
                         switch (pressCount)
                         {
                             case 1:
-                                LaunchGrimmkin();
-                                GameManager.instance.StartCoroutine(SetActiveFalse(1));
-                                break;
+                                if (noviceObj.Find("Explode Effects").Find("Smoke").GetComponent<ParticleSystem>().isPlaying)
+                                {
+                                    warpActive = false;
+                                    pressCount = 0;
+                                    Nightmare_Spark.Instance.Log("Didn't do shit");
+                                    break;
+                                }
+                                else
+                                {
+                                    LaunchGrimmkin();
+                                    GameManager.instance.StartCoroutine(SetActiveFalse(1));
+                                    break;
+                                }
                             case 2:
                                 if (noviceObj.GetComponent<NoviceBehaviour>().hitWall && !choice)
                                 {
@@ -84,7 +100,7 @@ namespace Nightmare_Spark
                     break;
                 case 2:
                     yield return new WaitUntil(() => warped = true);
-                    
+
                     yield return new WaitForSeconds(1);
                     warpActive = false;
                     pressCount = 0;
@@ -97,31 +113,23 @@ namespace Nightmare_Spark
             warped = false;
             bool facing = HeroController.instance.cState.facingRight;
             var grimmkinNovice = Nightmare_Spark.grimmkinSpawnerSmall.LocateMyFSM("Spawn Control").GetState("Level 1").GetAction<CreateObject>(0).gameObject.Value;
-            var novice = GameObject.Instantiate(grimmkinNovice);
-            GameObject.Destroy(novice.LocateMyFSM("Control"));
-            GameObject.Destroy(novice.GetComponent<DamageHero>());
-            novice.RemoveComponent<HealthManager>();
-            novice.RemoveComponent<EnemyDreamnailReaction>();
-            novice.AddComponent<NonBouncer>();
-            novice.AddComponent<NoviceBehaviour>();
-            GameObject transitionCollider = new();
-            novice.layer = (int)PhysLayers.DEFAULT;
             var dashClip = grimmkinNovice.LocateMyFSM("Control").GetState("Dash").GetAction<Tk2dPlayAnimationWithEvents>(0).clipName.Value;
-            novice.GetComponent<tk2dSpriteAnimator>().Play(dashClip);
-            novice.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = true;
-            novice.GetComponent<BoxCollider2D>().enabled = true;
+            noviceObj.GetComponent<MeshRenderer>().enabled = true;
+            noviceObj.GetComponent<tk2dSpriteAnimator>().Play(dashClip);
+            noviceObj.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = true;
+            noviceObj.GetComponent<BoxCollider2D>().enabled = true;
             int ws;
             if (HeroController.instance.wallSlidingR || HeroController.instance.wallSlidingL) { ws = -1; } else { ws = 1; }
-            if (HeroController.instance.wallSlidingR || HeroController.instance.wallSlidingL) { novice.transform.position = HeroController.instance.transform.position + new Vector3(facing ? -.5f : .5f,0); }
-            else { novice.transform.position = HeroController.instance.transform.position + new Vector3(facing ? -.25f : .25f, 0); }
-            novice.GetComponent<Rigidbody2D>().transform.localScale = new Vector2(facing ? -1f *ws : 1f*ws, 1);
+            if (HeroController.instance.wallSlidingR || HeroController.instance.wallSlidingL) { noviceObj.transform.position = HeroController.instance.transform.position + new Vector3(facing ? -.5f : .5f,0); }
+            else { noviceObj.transform.position = HeroController.instance.transform.position + new Vector3(facing ? -.25f : .25f, 0); }
+            noviceObj.GetComponent<Rigidbody2D>().transform.localScale = new Vector2(facing ? -1f *ws : 1f*ws, 1);
 
-            novice.GetComponent<Rigidbody2D>().velocity = new Vector2(facing ? 15 * ws : -15 * ws, 0);
+            noviceObj.GetComponent<Rigidbody2D>().velocity = new Vector2(facing ? 15 * ws : -15 * ws, 0);
 
             HeroController.instance.transform.Find("Torch Indicator").gameObject.active = true;
             HeroController.instance.transform.Find("Torch Indicator").Find("Active Effects").Find("Flame").gameObject.active = false;
             HeroController.instance.transform.Find("Torch Indicator").Find("Active Effects").Find("Pt Orbs").gameObject.active = false;
-            noviceObj = novice;
+            
         }
         private static void StopMovement()
         {
@@ -130,19 +138,24 @@ namespace Nightmare_Spark
             noviceObj.Find("Pt Dying").GetComponent<ParticleSystem>().enableEmission = true;
             noviceObj.GetComponent<tk2dSpriteAnimator>().Play(clipDie);
             GameManager.instance.StartCoroutine(SpawnTorch());
+            
+
         }
 
 
         private static IEnumerator SpawnTorch()
         {
             yield return new WaitForSeconds(.25f);
-            noviceObj.Find("Explode Effects").SetActive(true);
-            noviceObj.Find("Explode Effects").Find("Flame Ring").active = false;
+            noviceObj.Find("Explode Effects").active = true;
+            noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().enabled = true;
             noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().maxParticleSize = .1f;
+            noviceObj.Find("Explode Effects").Find("Smoke").GetComponent<ParticleSystemRenderer>().enabled = true;
             noviceObj.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = false;
             noviceObj.GetComponent<MeshRenderer>().enabled = false;
+            noviceObj.GetComponent<BoxCollider2D>().enabled = false;
             var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch");
             //activeTorch = torch.gameObject;
+            torch.Find("Active Effects").gameObject.active = true;
             torch.transform.position = noviceObj.transform.position;
             torch.gameObject.active = true;
             GameManager.instance.StartCoroutine(Warp());
@@ -152,10 +165,20 @@ namespace Nightmare_Spark
         {
             var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch").gameObject;
             yield return new WaitUntil(() => torch.active);
+            HeroController.instance.cState.onGround = false;
             HeroController.instance.transform.position = torch.transform.position;
-            torch.active = false;
-            warped = true;
+            GameManager.instance.cameraCtrl.SnapTo(HeroController.instance.transform.position.x, HeroController.instance.transform.position.y);
+            torch.active = false;         
             HeroController.instance.transform.Find("Torch Indicator").gameObject.active = false;
+            oldscale = Time.timeScale;
+            Time.timeScale = .1f;
+            yield return new WaitForSeconds(.2f);
+            Time.timeScale = oldscale;
+            yield return new WaitUntil(() => !noviceObj.Find("Explode Effects").Find("Smoke").GetComponent<ParticleSystem>().isPlaying);
+            noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().enabled = false;
+            noviceObj.Find("Explode Effects").Find("Smoke").GetComponent<ParticleSystemRenderer>().enabled = false;
+            noviceObj.Find("Explode Effects").active = false;
+            warped = true;
 
         }
 
@@ -172,21 +195,28 @@ namespace Nightmare_Spark
                     gameObject.Find("Pt Dying").GetComponent<ParticleSystem>().enableEmission = true;
                     gameObject.GetComponent<tk2dSpriteAnimator>().Play(clipDie);
                     GameManager.instance.StartCoroutine(SpawnTorch());
-                    
+                }
+                if (collision.gameObject.name == "Thorn Collider (6)")
+                {
+                    Nightmare_Spark.Instance.Log(collision.gameObject.layer);
                 }
             }
 
             public IEnumerator SpawnTorch()
             {
+
                 yield return new WaitForSeconds(.75f);
                 HeroController.instance.transform.Find("Torch Indicator").Find("Active Effects").Find("Flame").gameObject.active = true;
                 HeroController.instance.transform.Find("Torch Indicator").Find("Active Effects").Find("Pt Orbs").gameObject.active = true;
-                gameObject.Find("Explode Effects").SetActive(true);
-                noviceObj.Find("Explode Effects").Find("Flame Ring").active = false;
+                noviceObj.Find("Explode Effects").active = true;
+                noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().enabled = true;
                 noviceObj.Find("Explode Effects").Find("grimm_flame_particle").GetComponent<ParticleSystemRenderer>().maxParticleSize = .1f;
-                gameObject.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = false;
-                gameObject.GetComponent<MeshRenderer>().enabled = false;
+                noviceObj.Find("Explode Effects").Find("Smoke").GetComponent<ParticleSystemRenderer>().enabled = true;
+                noviceObj.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = false;
+                noviceObj.GetComponent<MeshRenderer>().enabled = false;
+                noviceObj.GetComponent<BoxCollider2D>().enabled = false;
                 var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch").gameObject;
+                torch.Find("Active Effects").gameObject.active = true;
                 torch.transform.position = gameObject.transform.position;
                 torch.active = true;
                 //activeTorch = torch.gameObject;

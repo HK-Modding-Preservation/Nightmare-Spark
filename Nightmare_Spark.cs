@@ -118,7 +118,7 @@ namespace Nightmare_Spark
                 ItemChangerMod.CreateSettingsProfile(overwrite: false, createDefaultModules: false);
                 orig(self, permaDeath, bossRush);
             };
-        
+
             ModHooks.SetPlayerBoolHook += (string target, bool orig) =>
             { 
                 var pd = PlayerData.instance;
@@ -150,13 +150,6 @@ namespace Nightmare_Spark
             };
             Log("Initialized");
         }
-        private void test()
-        {
-            if (ShapeOfGrimm.cancelGs)
-            {
-                Log("A");
-            }
-        }
         private void AddChild(On.HeroController.orig_Awake orig, HeroController self)
         {
             var indicatorTorch = GameObject.Instantiate(grimmkinSpawner.gameObject);
@@ -180,6 +173,28 @@ namespace Nightmare_Spark
             warpTorch.Find("Active Effects").active = false;
             warpTorch.active = false;
 
+            var grimmkinNovice = Nightmare_Spark.grimmkinSpawnerSmall.LocateMyFSM("Spawn Control").GetState("Level 1").GetAction<CreateObject>(0).gameObject.Value;
+            var novice = GameObject.Instantiate(grimmkinNovice);
+            GameObject.Destroy(novice.LocateMyFSM("Control"));
+            GameObject.Destroy(novice.GetComponent<DamageHero>());
+            novice.name = "NoviceObj";
+            novice.transform.parent = GameManager.instance.transform.Find("GlobalPool").transform;
+            novice.RemoveComponent<HealthManager>();
+            novice.RemoveComponent<EnemyDreamnailReaction>();
+            novice.AddComponent<NonBouncer>();
+            novice.AddComponent<GrimmkinWarp.NoviceBehaviour>();
+            novice.layer = (int)PhysLayers.DEFAULT;
+            novice.GetComponent<MeshRenderer>().enabled = false;
+            novice.Find("Pt Orbs").GetComponent<ParticleSystem>().enableEmission = false;
+            novice.Find("Explode Effects").Find("Flame Ring").active = false;
+            novice.GetComponent<BoxCollider2D>().enabled = false;
+            /*GameObject hazardCollider = new();
+            hazardCollider.name = "hazardCollider";
+            hazardCollider.transform.parent = novice.transform;
+            hazardCollider.layer = (int)PhysLayers.HERO_BOX;
+            hazardCollider.AddComponent<BoxCollider2D>().isTrigger = true;
+            hazardCollider.GetComponent<BoxCollider2D>().size = new Vector2(1.5f, 1);*/
+            GrimmkinWarp.noviceObj = novice;
 
             orig(self);
         }
@@ -347,25 +362,21 @@ namespace Nightmare_Spark
             }
             if (self.gameObject.name == "Knight" && self.FsmName == "Roar Lock")
             {
-                Log("1");
                 self.GetState("Lock Start").InsertCustomAction(() => ShapeOfGrimm.cancelGs = true, 10);
                 self.GetState("Regain Control").InsertCustomAction(() => ShapeOfGrimm.cancelGs = false, 3);
             }
             if (self.gameObject.name == "Final Boss Door" && self.FsmName == "Control")
             {
-                Log("2");
                 self.GetState("Take Control").InsertCustomAction(() => ShapeOfGrimm.cancelGs = true, 10);
                 self.GetState("End").InsertCustomAction(() => ShapeOfGrimm.cancelGs = false, 4);
             }
             if (self.gameObject.name == "Hornet Fountain Encounter" && self.FsmName == "Control")
             {
-                Log("3");
                 self.GetState("Take Control").InsertCustomAction(() => ShapeOfGrimm.cancelGs = true, 11);
                 self.GetState("End").InsertCustomAction(() => ShapeOfGrimm.cancelGs = false, 5);
             }
             if (self.gameObject.name == "Grimm Scene" && self.FsmName == "Initial Scene")
             {
-                Log("4");
                 self.GetState("Take Control").InsertCustomAction(() => ShapeOfGrimm.cancelGs = true, 11);
                 self.GetState("End").InsertCustomAction(() => ShapeOfGrimm.cancelGs = false, 6);
             }
@@ -441,9 +452,8 @@ namespace Nightmare_Spark
             int gcLevel = PlayerData.instance.GetInt("grimmChildLevel");
             if (PlayerData.instance.GetBool($"equippedCharm_{CharmIDs[0]}") && PlayerData.instance.GetBool("equippedCharm_40") && gcLevel <= 4 && gcLevel > 1)
             {
-                var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-                PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
-                
+               
+                PlayMakerFSM grimmchild = GameObject.FindWithTag("Grimmchild").LocateMyFSM("Control");
                 if (grimmchild != null)
                 {
                     
@@ -454,7 +464,7 @@ namespace Nightmare_Spark
             else
             {
                 var gc = HeroController.instance.transform.Find("Charm Effects").gameObject.LocateMyFSM("Spawn Grimmchild");
-                PlayMakerFSM grimmchild = gc.FsmVariables.FindFsmGameObject("Child").Value.LocateMyFSM("Control");
+                PlayMakerFSM grimmchild = GameObject.FindWithTag("Grimmchild").LocateMyFSM("Control");
                 if (grimmchild != null)
                 {
                     gc.FsmVariables.FindFsmGameObject("Child").Value.Find("Enemy Range").transform.localScale = new Vector3(1f, 1f, 1f);

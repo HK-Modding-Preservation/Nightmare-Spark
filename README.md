@@ -34,7 +34,8 @@ Hollow Knight Modding Discord server: https://discord.gg/VDsg3HmWuB
 
 Mod by RiverRobot#7826 (Discord), feel free to DM or ping me in the modding server for bug reports or balance suggestions, they're greatly appreciated!  
 
-Idea and charm sprite by user EchoKnight   
+Idea and (old) charm sprite by user EchoKnight   
+New charm sprite by DwarfWoot
 Shape of Grimm idea by user Ender Onryo  
 
 Thanks to Mulhima#2695 and Dandy#8904 for assisting with the creation of this mod!  
