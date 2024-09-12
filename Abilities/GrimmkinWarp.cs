@@ -19,14 +19,17 @@ namespace Nightmare_Spark
         public static float oldscale = 1;
         internal static void SceneChange(Scene From, Scene To)
         {
-            pressCount = 0;
-            warpActive = false;
-            warped = false;
-            choice = false;
-            Time.timeScale = oldscale;
-            var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch").gameObject;
-            torch.active = false;
-            GameManager.instance.StopCoroutine(Warp());
+            if (GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch") != null)
+            {
+                pressCount = 0;
+                warpActive = false;
+                warped = false;
+                choice = false;
+                Time.timeScale = oldscale;
+                var torch = GameManager.instance.transform.Find("GlobalPool").Find("Warp Torch").gameObject;
+                torch.active = false;
+                GameManager.instance.StopCoroutine(Warp());
+            }
         }
 
         public static void WarpMain()
